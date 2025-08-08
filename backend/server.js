@@ -36,13 +36,21 @@ app.use((req, res, next) => {
   next();
 });
 
-// Health check endpoint
-app.get('/health', (req, res) => {
+// Health check endpoint (includes DB status)
+app.get('/health', async (req, res) => {
+  let dbStatus = 'unknown';
+  try {
+    await sequelize.authenticate({ logging: false });
+    dbStatus = 'connected';
+  } catch (e) {
+    dbStatus = 'disconnected';
+  }
   res.status(200).json({
     status: 'OK',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    environment: process.env.NODE_ENV
+    environment: process.env.NODE_ENV,
+    db: dbStatus
   });
 });
 
@@ -84,22 +92,53 @@ app.use('*', (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 
-// Database connection and server start
+// Database connection and server start with retry and optional fallback
 const startServer = async () => {
+  const FALLBACK_NO_DB = process.env.FALLBACK_NO_DB === 'true';
+  const MAX_RETRIES = Number(process.env.WAIT_FOR_DB_RETRIES || 10);
+  const RETRY_DELAY_MS = Number(process.env.WAIT_FOR_DB_DELAY_MS || 2000);
+
+  let connected = false;
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      await sequelize.authenticate();
+      console.log('Database connection established successfully.');
+      connected = true;
+      break;
+    } catch (error) {
+      console.error(`DB connection attempt ${attempt}/${MAX_RETRIES} failed:`, error.message || error);
+      if (attempt < MAX_RETRIES) {
+        await new Promise(r => setTimeout(r, RETRY_DELAY_MS));
+      }
+    }
+  }
+
+  if (!connected) {
+    if (FALLBACK_NO_DB) {
+      console.warn('Starting server in NO-DB fallback mode due to DB connection failure.');
+      // Start server without syncing
+      server.listen(PORT, () => {
+        console.log(`Smart City OS Server (NO-DB mode) running on port ${PORT}`);
+        console.log(`Environment: ${process.env.NODE_ENV}`);
+        console.log(`Health check: http://localhost:${PORT}/health`);
+      });
+      return;
+    }
+    console.error('Unable to connect to DB after retries. Exiting.');
+    process.exit(1);
+  }
+
   try {
-    await sequelize.authenticate();
-    console.log('Database connection established successfully.');
-    
     await sequelize.sync({ force: false });
     console.log('Database synchronized.');
-    
+
     server.listen(PORT, () => {
       console.log(`Smart City OS Server running on port ${PORT}`);
       console.log(`Environment: ${process.env.NODE_ENV}`);
       console.log(`Health check: http://localhost:${PORT}/health`);
     });
   } catch (error) {
-    console.error('Unable to start server:', error);
+    console.error('Unable to start server after DB connection:', error.message || error);
     process.exit(1);
   }
 };

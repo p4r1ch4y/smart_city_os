@@ -31,8 +31,10 @@ class SmartCityAPIClient:
     def register_sensor(self, sensor_info: Dict[str, Any]) -> bool:
         """Register a new sensor with the backend"""
         try:
+            url = f"{self.base_url}/api/sensors"
+            print(f"DEBUG: Registering sensor at URL: {url}")
             response = self.session.post(
-                f"{self.base_url}/sensors",
+                url,
                 json=sensor_info,
                 timeout=self.timeout
             )
@@ -60,7 +62,7 @@ class SmartCityAPIClient:
         """Send sensor data to the backend"""
         try:
             response = self.session.post(
-                f"{self.base_url}/sensors/data",
+                f"{self.base_url}/api/sensors/data",
                 json=sensor_data,
                 timeout=self.timeout
             )

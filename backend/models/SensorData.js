@@ -1,4 +1,4 @@
-const { DataTypes } = require('sequelize');
+const { DataTypes, Op, QueryTypes } = require('sequelize');
 const { sequelize } = require('../config/database');
 const Sensor = require('./Sensor');
 
@@ -44,7 +44,8 @@ const SensorData = sequelize.define('SensorData', {
 }, {
   indexes: [
     {
-      fields: ['sensorId', 'timestamp']
+      // Use underscored column name to match define.underscored
+      fields: ['sensor_id', 'timestamp']
     },
     {
       fields: ['timestamp']
@@ -184,7 +185,7 @@ SensorData.getAggregatedData = async function(sensorId, interval = 'hour', start
   
   return await sequelize.query(query, {
     replacements: { sensorId, startTime, endTime },
-    type: sequelize.QueryTypes.SELECT
+    type: QueryTypes.SELECT
   });
 };
 

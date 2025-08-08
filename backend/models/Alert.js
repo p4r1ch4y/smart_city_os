@@ -90,13 +90,15 @@ const Alert = sequelize.define('Alert', {
 }, {
   indexes: [
     {
-      fields: ['sensorId', 'status']
+      // Use underscored column name in index to match global underscored setting
+      fields: ['sensor_id', 'status']
     },
     {
       fields: ['severity', 'status']
     },
     {
-      fields: ['createdAt']
+      // underscored setting maps createdAt -> created_at
+      fields: ['created_at']
     },
     {
       fields: ['type', 'status']

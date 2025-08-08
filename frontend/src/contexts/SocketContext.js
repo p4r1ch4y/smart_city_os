@@ -168,23 +168,28 @@ export function SocketProvider({ children }) {
     });
 
     newSocket.on('sensor-status-change', (data) => {
-      setRealtimeData(prev => ({
-        ...prev,
-        sensors: {
-          ...prev.sensors,
-          [data.sensorId]: {
-            ...prev.sensors[data.sensorId],
-            status: data.status,
-            lastHeartbeat: data.lastHeartbeat
+      setRealtimeData(prev => {
+        const newData = {
+          ...prev,
+          sensors: {
+            ...prev.sensors,
+            [data.sensorId]: {
+              ...prev.sensors[data.sensorId],
+              status: data.status,
+              lastHeartbeat: data.lastHeartbeat
+            }
           }
-        }
-      }));
+        };
 
-      if (data.status === 'offline') {
-        toast.error(`Sensor ${data.sensorId} went offline`);
-      } else if (data.status === 'active' && prev.sensors[data.sensorId]?.status === 'offline') {
-        toast.success(`Sensor ${data.sensorId} is back online`);
-      }
+        // Check for status changes for notifications
+        if (data.status === 'offline') {
+          toast.error(`Sensor ${data.sensorId} went offline`);
+        } else if (data.status === 'active' && prev.sensors[data.sensorId]?.status === 'offline') {
+          toast.success(`Sensor ${data.sensorId} is back online`);
+        }
+
+        return newData;
+      });
     });
 
     setSocket(newSocket);

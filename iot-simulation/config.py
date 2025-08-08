@@ -6,7 +6,7 @@ load_dotenv()
 
 class Config:
     # API Configuration
-    API_ENDPOINT = os.getenv('IOT_API_ENDPOINT', 'http://localhost:3000/api/sensors')
+    API_ENDPOINT = os.getenv('IOT_API_ENDPOINT', 'http://localhost:3000')
     UPDATE_INTERVAL = int(os.getenv('IOT_UPDATE_INTERVAL', 5000)) / 1000  # Convert to seconds
     SENSORS_COUNT = int(os.getenv('IOT_SENSORS_COUNT', 50))
     
