@@ -1,94 +1,34 @@
 # Smart City OS
 
-A comprehensive Smart City Operating System with IoT integration, predictive analytics, and blockchain transparency.
+A comprehensive Smart City Operating System with IoT integration, real-time monitoring, and predictive analytics.
 
-## Architecture Overview
+## 🚧 Under Development
 
-### Module 1: User Management
-- JWT Authentication
-- Role-based Access Control (RBAC)
-- User registration and login
+This project is currently under active development. The main implementation is being added via pull requests.
 
-### Module 2: IoT Sensor Data Simulation
-- Real-time sensor data generation
-- Traffic, waste, and environmental sensors
-- REST API integration
+## 🎯 Planned Features
 
-### Module 3: Backend API
-- Express.js server
-- PostgreSQL database
-- Alert system
+- **Real-time IoT Sensor Monitoring**: Traffic, waste, air quality, noise, water, energy, and parking sensors
+- **Modern React Dashboard**: Beautiful, responsive UI with real-time data visualization
+- **Enterprise Backend**: Node.js/Express API with PostgreSQL and WebSocket support
+- **Predictive Analytics**: ML-powered insights and forecasting
+- **Blockchain Integration**: Transparent data logging with Solana
+- **Kubernetes Deployment**: Production-ready containerized deployment
 
-### Module 4: Predictive Analytics
-- LSTM/ARIMA models
-- Traffic prediction
-- Resource optimization
+## 📋 Modules
 
-### Module 5: Frontend Dashboard
-- React application
-- Real-time data visualization
-- Interactive maps with Leaflet
+1. **User Management & Authentication** - JWT-based auth with role-based access control
+2. **IoT Sensor Data Simulation** - Realistic sensor data generation
+3. **Backend API & Real-time System** - Express.js API with WebSocket support
+4. **Predictive Analytics** - Machine learning models for city insights
+5. **Frontend Dashboard** - Modern React interface
+6. **Blockchain Integration** - Solana smart contracts for transparency
+7. **Deployment & DevOps** - Kubernetes, CI/CD, and monitoring
 
-### Module 6: Blockchain Integration
-- Solana smart contracts
-- Transparent logging
-- Web3.js integration
+## 🚀 Getting Started
 
-### Module 7: Deployment & DevOps
-- Docker containerization
-- Kubernetes orchestration
-- CI/CD pipelines
+Check the pull requests for the latest implementation progress.
 
-## Quick Start
+## 📄 License
 
-1. Install dependencies:
-```bash
-npm install
-```
-
-2. Set up environment variables:
-```bash
-cp .env.example .env
-```
-
-3. Start the development server:
-```bash
-npm run dev
-```
-
-4. Start IoT simulation:
-```bash
-npm run iot-sim
-```
-
-5. Start frontend:
-```bash
-npm run frontend
-```
-
-## Project Structure
-
-```
-smart-city-os/
-├── backend/                 # Express.js API server
-├── frontend/               # React dashboard
-├── iot-simulation/         # Python IoT data simulation
-├── analytics/              # Predictive analytics service
-├── blockchain/             # Solana smart contracts
-├── docker/                 # Docker configurations
-├── k8s/                    # Kubernetes manifests
-└── docs/                   # Documentation
-```
-
-## Technologies Used
-
-- **Backend**: Node.js, Express.js, PostgreSQL, Socket.IO
-- **Frontend**: React, Leaflet, Chart.js, WebSockets
-- **IoT Simulation**: Python, REST APIs
-- **Analytics**: Python, TensorFlow/PyTorch, LSTM, ARIMA
-- **Blockchain**: Solana, Web3.js
-- **DevOps**: Docker, Kubernetes, GitHub Actions
-
-## License
-
-MIT License
+MIT License - see LICENSE file for details.
