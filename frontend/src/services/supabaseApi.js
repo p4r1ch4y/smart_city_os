@@ -11,22 +11,54 @@ export const sensorService = {
     } catch (error) {
       console.error('Error fetching sensors:', error);
       // Return mock data as fallback
+      // Generate Indian city sensors with proper coordinates
+      const indianCities = [
+        { name: 'Kolkata', lat: 22.5726, lng: 88.3639 },
+        { name: 'Mumbai', lat: 19.0760, lng: 72.8777 },
+        { name: 'Delhi', lat: 28.7041, lng: 77.1025 },
+        { name: 'Bangalore', lat: 12.9716, lng: 77.5946 },
+        { name: 'Chennai', lat: 13.0827, lng: 80.2707 },
+        { name: 'Hyderabad', lat: 17.3850, lng: 78.4867 },
+        { name: 'Pune', lat: 18.5204, lng: 73.8567 },
+        { name: 'Ahmedabad', lat: 23.0225, lng: 72.5714 }
+      ];
+
+      const sensorTypes = ['traffic', 'air_quality', 'energy', 'water', 'waste'];
+      const locations = [
+        'Main Road Junction', 'City Center', 'Market Area', 'Residential Zone', 'Industrial Area',
+        'Bus Station', 'Railway Station', 'Airport Road', 'Hospital Area', 'School Zone',
+        'Shopping Mall', 'Government Office', 'Park Area', 'River Bank', 'Highway Entrance'
+      ];
+
       return {
         data: {
-          sensors: Array.from({ length: 34 }, (_, i) => ({
-            id: `sensor_${String(i + 1).padStart(3, '0')}`,
-            name: `Sensor ${i + 1}`,
-            type: ['traffic', 'air_quality', 'energy', 'water', 'waste'][i % 5],
-            location: `Location ${i + 1}`,
-            status: Math.random() > 0.1 ? 'active' : 'inactive',
-            last_reading: new Date(Date.now() - Math.random() * 3600000).toISOString(),
-            value: Math.random() * 100,
-            coordinates: {
-              lat: 12.9716 + (Math.random() - 0.5) * 0.1,
-              lng: 77.5946 + (Math.random() - 0.5) * 0.1
-            },
-            created_at: new Date(Date.now() - Math.random() * 86400000 * 30).toISOString()
-          }))
+          sensors: Array.from({ length: 34 }, (_, i) => {
+            const city = indianCities[i % indianCities.length];
+            const sensorType = sensorTypes[i % sensorTypes.length];
+            const location = locations[i % locations.length];
+
+            // Add some random offset to city coordinates
+            const latOffset = (Math.random() - 0.5) * 0.05; // ~5km radius
+            const lngOffset = (Math.random() - 0.5) * 0.05;
+
+            return {
+              id: `sensor_${String(i + 1).padStart(3, '0')}`,
+              name: `${sensorType.replace('_', ' ').toUpperCase()} - ${location}`,
+              type: sensorType,
+              location: `${location}, ${city.name}`,
+              city: city.name,
+              latitude: city.lat + latOffset,
+              longitude: city.lng + lngOffset,
+              status: Math.random() > 0.1 ? 'active' : 'inactive',
+              last_reading: new Date(Date.now() - Math.random() * 3600000).toISOString(),
+              value: Math.random() * 100,
+              created_at: new Date(Date.now() - Math.random() * 86400000 * 30).toISOString(),
+              metadata: {
+                installation_date: new Date(Date.now() - Math.random() * 86400000 * 365).toISOString().split('T')[0],
+                last_maintenance: new Date(Date.now() - Math.random() * 86400000 * 30).toISOString().split('T')[0]
+              }
+            };
+          })
         }
       };
     }
@@ -365,10 +397,12 @@ export const subscriptionService = {
   }
 };
 
-export default {
+const supabaseApiServices = {
   sensorService,
   alertService,
   analyticsService,
   blockchainService,
   subscriptionService
 };
+
+export default supabaseApiServices;

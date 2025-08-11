@@ -138,13 +138,37 @@ INSERT INTO users (email, password_hash, first_name, last_name, role) VALUES
 ('sanitation@smartcity.gov', '$2b$10$hash', 'Sanitation', 'Manager', 'sanitation_officer'),
 ('citizen@example.com', '$2b$10$hash', 'John', 'Doe', 'citizen');
 
--- Sample sensors (Kolkata & Kharagpur)
+-- Sample sensors (Indian Cities)
 INSERT INTO sensors (name, type, location, city, latitude, longitude, status, installation_date, metadata) VALUES
-('Esplanade Traffic', 'traffic', 'Esplanade Crossing', 'Kolkata', 22.5641, 88.3489, 'active', '2023-01-15', '{"lanes": 4}'),
-('Salt Lake Air Monitor', 'air_quality', 'Salt Lake Sector V', 'Kolkata', 22.5726, 88.4324, 'active', '2023-02-10', '{"parameters": ["PM2.5", "PM10"]}'),
-('New Market Waste Bin', 'waste', 'New Market', 'Kolkata', 22.5558, 88.3515, 'active', '2023-01-25', '{"capacity": "500L"}'),
-('IIT Main Gate Traffic', 'traffic', 'IIT Kharagpur Main Gate', 'Kharagpur', 22.3149, 87.3105, 'active', '2023-03-01', '{"lanes": 2}'),
-('Market Area Waste', 'waste', 'Kharagpur Market', 'Kharagpur', 22.3392, 87.3250, 'active', '2023-03-10', '{"capacity": "300L"}');
+-- Kolkata sensors
+('Esplanade Traffic Monitor', 'traffic', 'Esplanade Crossing', 'Kolkata', 22.5641, 88.3489, 'active', '2023-01-15', '{"lanes": 4, "peak_hours": "8-10,18-20"}'),
+('Salt Lake Air Quality', 'air_quality', 'Salt Lake Sector V', 'Kolkata', 22.5726, 88.4324, 'active', '2023-02-10', '{"parameters": ["PM2.5", "PM10", "NO2"]}'),
+('New Market Waste Bin', 'waste', 'New Market Area', 'Kolkata', 22.5558, 88.3515, 'active', '2023-01-25', '{"capacity": "500L", "collection_frequency": "daily"}'),
+('Howrah Bridge Energy', 'energy', 'Howrah Bridge', 'Kolkata', 22.5851, 88.3467, 'active', '2023-03-05', '{"type": "street_lighting", "power_rating": "50kW"}'),
+('Maidan Water Quality', 'water', 'Maidan Area', 'Kolkata', 22.5448, 88.3426, 'active', '2023-02-20', '{"source": "municipal", "parameters": ["pH", "TDS", "chlorine"]}'),
+
+-- Mumbai sensors
+('Marine Drive Traffic', 'traffic', 'Marine Drive', 'Mumbai', 19.0176, 72.8562, 'active', '2023-01-20', '{"lanes": 6, "type": "coastal_road"}'),
+('Bandra Air Monitor', 'air_quality', 'Bandra West', 'Mumbai', 19.0596, 72.8295, 'active', '2023-02-15', '{"parameters": ["PM2.5", "PM10", "SO2"]}'),
+('CST Energy Monitor', 'energy', 'Chhatrapati Shivaji Terminus', 'Mumbai', 18.9398, 72.8355, 'active', '2023-03-01', '{"type": "railway_station", "power_rating": "200kW"}'),
+
+-- Delhi sensors
+('India Gate Traffic', 'traffic', 'India Gate Circle', 'Delhi', 28.6129, 77.2295, 'active', '2023-01-10', '{"lanes": 8, "monument_area": true}'),
+('CP Air Quality', 'air_quality', 'Connaught Place', 'Delhi', 28.6315, 77.2167, 'active', '2023-02-05', '{"parameters": ["PM2.5", "PM10", "NO2", "O3"]}'),
+('Red Fort Waste', 'waste', 'Red Fort Area', 'Delhi', 28.6562, 77.2410, 'active', '2023-01-30', '{"capacity": "750L", "heritage_area": true}'),
+
+-- Bangalore sensors
+('MG Road Traffic', 'traffic', 'MG Road Junction', 'Bangalore', 12.9716, 77.5946, 'active', '2023-01-25', '{"lanes": 4, "commercial_area": true}'),
+('Cubbon Park Air', 'air_quality', 'Cubbon Park', 'Bangalore', 12.9698, 77.5936, 'active', '2023-02-12', '{"parameters": ["PM2.5", "PM10"], "green_zone": true}'),
+('Electronic City Energy', 'energy', 'Electronic City', 'Bangalore', 12.8456, 77.6603, 'active', '2023-03-08', '{"type": "IT_park", "power_rating": "500kW"}'),
+
+-- Chennai sensors
+('Marina Beach Traffic', 'traffic', 'Marina Beach Road', 'Chennai', 13.0475, 80.2824, 'active', '2023-01-18', '{"lanes": 4, "coastal_road": true}'),
+('T Nagar Air Monitor', 'air_quality', 'T Nagar', 'Chennai', 13.0418, 80.2341, 'active', '2023-02-08', '{"parameters": ["PM2.5", "PM10"], "commercial_zone": true}'),
+
+-- Additional sensors for demo
+('Kharagpur IIT Traffic', 'traffic', 'IIT Kharagpur Main Gate', 'Kharagpur', 22.3149, 87.3105, 'active', '2023-03-01', '{"lanes": 2, "educational_zone": true}'),
+('Kharagpur Market Waste', 'waste', 'Kharagpur Market', 'Kharagpur', 22.3392, 87.3250, 'active', '2023-03-10', '{"capacity": "300L"}');
 
 -- Sample readings
 INSERT INTO sensor_readings (sensor_id, timestamp, data) 

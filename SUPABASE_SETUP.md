@@ -16,8 +16,10 @@ This guide will help you migrate the Smart City OS from PostgreSQL + JWT authent
 ### 2. Database Setup
 
 1. In your Supabase dashboard, go to **SQL Editor**
-2. Copy and paste the contents of `database/supabase-schema.sql`
+2. Copy and paste the contents of `supabase_setup.sql` (in the root directory)
 3. Run the SQL to create all tables, policies, and sample data
+4. This will create 18 realistic sensors across major Indian cities
+5. Verify the data by checking the `sensors` table in the Table Editor
 
 ### 3. Environment Configuration
 
@@ -166,22 +168,32 @@ The system includes sample users:
 
 ### Common Issues
 
-1. **Supabase Connection Failed**
+1. **SensorMap "Invalid LatLng" Error** ✅ FIXED
+   - **Issue**: Map showing "Invalid LatLng object: (undefined, undefined)"
+   - **Solution**: Updated coordinate handling with validation and fallbacks
+   - **Status**: Completely resolved with Indian city coordinates
+
+2. **Supabase Connection Failed**
    - Verify project URL and keys
    - Check network connectivity
    - Ensure RLS policies are set correctly
 
-2. **Authentication Issues**
+3. **Authentication Issues**
    - Verify redirect URLs in Supabase
    - Check email provider settings
    - Ensure user exists in database
 
-3. **Real-time Not Working**
+4. **Real-time Not Working**
    - Check Supabase real-time settings
    - Verify table permissions
    - Enable real-time for tables
 
-4. **Styling Issues**
+5. **Map Not Loading**
+   - Check browser console for coordinate errors
+   - Verify sensor data has latitude/longitude fields
+   - Ensure Leaflet CSS is properly imported
+
+6. **Styling Issues**
    - Ensure indian-theme.css is imported
    - Check CSS variable definitions
    - Verify Tailwind CSS classes

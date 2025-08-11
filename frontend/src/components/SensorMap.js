@@ -12,6 +12,44 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
+// Default coordinates for Indian cities
+const DEFAULT_COORDINATES = {
+  kolkata: { lat: 22.5726, lng: 88.3639 },
+  kharagpur: { lat: 22.3149, lng: 87.3105 },
+  mumbai: { lat: 19.0760, lng: 72.8777 },
+  delhi: { lat: 28.7041, lng: 77.1025 },
+  bangalore: { lat: 12.9716, lng: 77.5946 }
+};
+
+// Helper function to extract coordinates from sensor data
+const getCoordinates = (sensor) => {
+  // Handle different coordinate formats
+  if (sensor.latitude && sensor.longitude) {
+    return { lat: parseFloat(sensor.latitude), lng: parseFloat(sensor.longitude) };
+  }
+  if (sensor.coordinates && sensor.coordinates.lat && sensor.coordinates.lng) {
+    return { lat: parseFloat(sensor.coordinates.lat), lng: parseFloat(sensor.coordinates.lng) };
+  }
+  if (sensor.location && sensor.location.latitude && sensor.location.longitude) {
+    return { lat: parseFloat(sensor.location.latitude), lng: parseFloat(sensor.location.longitude) };
+  }
+
+  // Fallback to default coordinates based on city or sensor type
+  const city = sensor.city?.toLowerCase() || 'kolkata';
+  return DEFAULT_COORDINATES[city] || DEFAULT_COORDINATES.kolkata;
+};
+
+// Helper function to validate coordinates
+const isValidCoordinate = (coord) => {
+  return coord &&
+         typeof coord.lat === 'number' &&
+         typeof coord.lng === 'number' &&
+         !isNaN(coord.lat) &&
+         !isNaN(coord.lng) &&
+         coord.lat >= -90 && coord.lat <= 90 &&
+         coord.lng >= -180 && coord.lng <= 180;
+};
+
 // Custom sensor icons
 const createSensorIcon = (type, status = 'active') => {
   const colors = {
@@ -66,18 +104,30 @@ function MapBounds({ sensors }) {
 
   useEffect(() => {
     if (sensors.length > 0) {
-      const bounds = L.latLngBounds(
-        sensors.map(sensor => [
-          sensor.location.latitude,
-          sensor.location.longitude
-        ])
-      );
-      map.fitBounds(bounds, { padding: [20, 20] });
+      // Filter sensors with valid coordinates and create bounds
+      const validSensors = sensors
+        .map(sensor => getCoordinates(sensor))
+        .filter(coord => isValidCoordinate(coord));
+
+      if (validSensors.length > 0) {
+        const bounds = L.latLngBounds(
+          validSensors.map(coord => [coord.lat, coord.lng])
+        );
+        map.fitBounds(bounds, { padding: [20, 20] });
+      } else {
+        // Fallback to Kolkata if no valid sensors
+        map.setView([DEFAULT_COORDINATES.kolkata.lat, DEFAULT_COORDINATES.kolkata.lng], 12);
+      }
     } else {
-      // Fit to city bounds if no sensors
-      const b = city.bounds;
-      const bounds = L.latLngBounds([[b.south, b.west], [b.north, b.east]]);
-      map.fitBounds(bounds, { padding: [20, 20] });
+      // Fit to city bounds if no sensors, or fallback to Kolkata
+      try {
+        const b = city.bounds;
+        const bounds = L.latLngBounds([[b.south, b.west], [b.north, b.east]]);
+        map.fitBounds(bounds, { padding: [20, 20] });
+      } catch (error) {
+        console.warn('City bounds not available, using default coordinates');
+        map.setView([DEFAULT_COORDINATES.kolkata.lat, DEFAULT_COORDINATES.kolkata.lng], 12);
+      }
     }
   }, [sensors, map, city]);
   
@@ -88,7 +138,8 @@ function SensorMap({ sensors = [], realtimeData = {}, height = 400 }) {
   const mapRef = useRef();
   const { city } = useCity();
 
-  const defaultCenter = city.center;
+  // Use safe default center with fallback
+  const defaultCenter = city?.center || [DEFAULT_COORDINATES.kolkata.lat, DEFAULT_COORDINATES.kolkata.lng];
   const defaultZoom = 12;
 
   const formatSensorData = (sensor, realtime) => {
@@ -145,11 +196,18 @@ function SensorMap({ sensors = [], realtimeData = {}, height = 400 }) {
         {sensors.map((sensor) => {
           const realtime = realtimeData[sensor.sensorId];
           const isOnline = sensor.status === 'active' && realtime;
-          
+          const coordinates = getCoordinates(sensor);
+
+          // Skip sensors with invalid coordinates
+          if (!isValidCoordinate(coordinates)) {
+            console.warn(`Skipping sensor ${sensor.id} with invalid coordinates:`, sensor);
+            return null;
+          }
+
           return (
             <Marker
               key={sensor.id}
-              position={[sensor.location.latitude, sensor.location.longitude]}
+              position={[coordinates.lat, coordinates.lng]}
               icon={createSensorIcon(sensor.type, sensor.status)}
             >
               <Popup className="sensor-popup">
