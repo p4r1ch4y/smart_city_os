@@ -1,12 +1,12 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
-import { io } from 'socket.io-client';
+import { supabase, TABLES } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 import toast from 'react-hot-toast';
 
 const SocketContext = createContext();
 
 export function SocketProvider({ children }) {
-  const [socket, setSocket] = useState(null);
+  const [subscriptions, setSubscriptions] = useState([]);
   const [isConnected, setIsConnected] = useState(false);
   const [realtimeData, setRealtimeData] = useState({
     sensors: {},
@@ -19,235 +19,229 @@ export function SocketProvider({ children }) {
 
   useEffect(() => {
     if (isAuthenticated && user) {
-      connectSocket();
+      setupSupabaseSubscriptions();
     } else {
-      disconnectSocket();
+      cleanupSubscriptions();
     }
 
     return () => {
-      disconnectSocket();
+      cleanupSubscriptions();
     };
   }, [isAuthenticated, user]);
 
-  const connectSocket = () => {
-    if (socket?.connected) return;
+  const setupSupabaseSubscriptions = () => {
+    if (subscriptions.length > 0) return;
 
-    const newSocket = io(process.env.REACT_APP_WS_URL || 'ws://localhost:3000', {
-      transports: ['websocket', 'polling'],
-      timeout: 20000,
-      forceNew: true
-    });
+    console.log('Setting up Supabase real-time subscriptions...');
 
-    newSocket.on('connect', () => {
-      console.log('Socket connected:', newSocket.id);
-      setIsConnected(true);
-      reconnectAttempts.current = 0;
-      
-      // Join user-specific room
-      if (user?.role) {
-        newSocket.emit('join-room', `role-${user.role}`);
-        newSocket.emit('join-room', `user-${user.id}`);
-      }
-      
-      toast.success('Real-time connection established');
-    });
-
-    newSocket.on('disconnect', (reason) => {
-      console.log('Socket disconnected:', reason);
-      setIsConnected(false);
-      
-      if (reason === 'io server disconnect') {
-        // Server initiated disconnect, don't reconnect
-        return;
-      }
-      
-      // Attempt to reconnect
-      if (reconnectAttempts.current < maxReconnectAttempts) {
-        reconnectAttempts.current++;
-        setTimeout(() => {
-          if (!newSocket.connected) {
-            newSocket.connect();
+    try {
+      // Subscribe to sensor data changes
+      const sensorDataSubscription = supabase
+        .channel('sensor_data_changes')
+        .on('postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: TABLES.SENSOR_DATA
+          },
+          (payload) => {
+            console.log('Sensor data change:', payload);
+            handleSensorDataChange(payload);
           }
-        }, Math.pow(2, reconnectAttempts.current) * 1000); // Exponential backoff
-      } else {
-        toast.error('Lost connection to server');
-      }
-    });
+        )
+        .subscribe();
 
-    newSocket.on('connect_error', (error) => {
-      console.error('Socket connection error:', error);
-      setIsConnected(false);
-    });
+      // Subscribe to alerts changes
+      const alertsSubscription = supabase
+        .channel('alerts_changes')
+        .on('postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: TABLES.ALERTS
+          },
+          (payload) => {
+            console.log('Alert change:', payload);
+            handleAlertChange(payload);
+          }
+        )
+        .subscribe();
 
-    // Real-time data handlers
-    newSocket.on('sensor-data', (data) => {
+      // Subscribe to sensors changes
+      const sensorsSubscription = supabase
+        .channel('sensors_changes')
+        .on('postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: TABLES.SENSORS
+          },
+          (payload) => {
+            console.log('Sensor change:', payload);
+            handleSensorChange(payload);
+          }
+        )
+        .subscribe();
+
+      setSubscriptions([sensorDataSubscription, alertsSubscription, sensorsSubscription]);
+      setIsConnected(true);
+      toast.success('Real-time connection established');
+
+    } catch (error) {
+      console.error('Error setting up Supabase subscriptions:', error);
+      toast.error('Failed to establish real-time connection');
+    }
+  };
+
+  const handleSensorDataChange = (payload) => {
+    const { eventType, new: newRecord, old: oldRecord } = payload;
+
+    if (eventType === 'INSERT' || eventType === 'UPDATE') {
       setRealtimeData(prev => ({
         ...prev,
         sensors: {
           ...prev.sensors,
-          [data.sensorId]: {
-            ...data,
-            timestamp: new Date(data.data.timestamp || Date.now())
+          [newRecord.sensor_id]: {
+            ...prev.sensors[newRecord.sensor_id],
+            lastReading: newRecord.timestamp,
+            value: newRecord.value,
+            unit: newRecord.unit
           }
         }
       }));
+    }
+  };
 
-      // Show alert notifications if any
-      if (data.alerts && data.alerts.length > 0) {
-        data.alerts.forEach(alert => {
-          if (alert.severity === 'critical') {
-            toast.error(`Critical Alert: ${alert.condition} for ${data.sensorId}`);
-          } else if (alert.severity === 'warning') {
-            toast.error(`Warning: ${alert.condition} for ${data.sensorId}`);
-          }
-        });
-      }
-    });
+  const handleAlertChange = (payload) => {
+    const { eventType, new: newRecord, old: oldRecord } = payload;
 
-    newSocket.on('alert-created', (alert) => {
+    if (eventType === 'INSERT') {
       setRealtimeData(prev => ({
         ...prev,
-        alerts: [alert, ...prev.alerts.slice(0, 99)] // Keep last 100 alerts
+        alerts: [newRecord, ...prev.alerts.slice(0, 49)] // Keep last 50 alerts
       }));
 
-      // Show notification based on severity
-      const message = `${alert.title} - ${alert.sensor?.name || 'Unknown sensor'}`;
-      
-      if (alert.severity === 'critical') {
-        toast.error(message, { duration: 6000 });
-      } else if (alert.severity === 'high') {
-        toast.error(message, { duration: 4000 });
-      } else if (alert.severity === 'medium') {
-        toast(message, { 
-          icon: '⚠️',
-          duration: 3000 
-        });
+      // Show toast for new alerts
+      if (newRecord.severity === 'critical') {
+        toast.error(`Critical Alert: ${newRecord.title}`);
+      } else if (newRecord.severity === 'high') {
+        toast.error(`High Priority Alert: ${newRecord.title}`);
       }
-    });
-
-    newSocket.on('alert-acknowledged', (data) => {
+    } else if (eventType === 'UPDATE') {
       setRealtimeData(prev => ({
         ...prev,
-        alerts: prev.alerts.map(alert => 
-          alert.id === data.alertId 
-            ? { ...alert, status: 'acknowledged', acknowledgedBy: data.acknowledgedBy }
-            : alert
+        alerts: prev.alerts.map(alert =>
+          alert.id === newRecord.id ? newRecord : alert
         )
       }));
-      
-      toast.success(`Alert acknowledged by ${data.acknowledgedBy}`);
-    });
-
-    newSocket.on('alert-resolved', (data) => {
+    } else if (eventType === 'DELETE') {
       setRealtimeData(prev => ({
         ...prev,
-        alerts: prev.alerts.map(alert => 
-          alert.id === data.alertId 
-            ? { ...alert, status: 'resolved', resolvedBy: data.resolvedBy }
-            : alert
-        )
+        alerts: prev.alerts.filter(alert => alert.id !== oldRecord.id)
       }));
-      
-      toast.success(`Alert resolved by ${data.resolvedBy}`);
-    });
+    }
+  };
 
-    newSocket.on('alert-dismissed', (data) => {
+  const handleSensorChange = (payload) => {
+    const { eventType, new: newRecord, old: oldRecord } = payload;
+
+    if (eventType === 'UPDATE') {
+      // Update sensor status or metadata
       setRealtimeData(prev => ({
         ...prev,
-        alerts: prev.alerts.filter(alert => alert.id !== data.alertId)
-      }));
-      
-      toast.success(`Alert dismissed by ${data.dismissedBy}`);
-    });
-
-    newSocket.on('stats-update', (stats) => {
-      setRealtimeData(prev => ({
-        ...prev,
-        stats: { ...prev.stats, ...stats }
-      }));
-    });
-
-    newSocket.on('sensor-status-change', (data) => {
-      setRealtimeData(prev => {
-        const newData = {
-          ...prev,
-          sensors: {
-            ...prev.sensors,
-            [data.sensorId]: {
-              ...prev.sensors[data.sensorId],
-              status: data.status,
-              lastHeartbeat: data.lastHeartbeat
-            }
+        sensors: {
+          ...prev.sensors,
+          [newRecord.id]: {
+            ...prev.sensors[newRecord.id],
+            status: newRecord.status,
+            metadata: newRecord.metadata
           }
-        };
-
-        // Check for status changes for notifications
-        if (data.status === 'offline') {
-          toast.error(`Sensor ${data.sensorId} went offline`);
-        } else if (data.status === 'active' && prev.sensors[data.sensorId]?.status === 'offline') {
-          toast.success(`Sensor ${data.sensorId} is back online`);
         }
+      }));
+    }
+  };
 
-        return newData;
-      });
+  const cleanupSubscriptions = () => {
+    console.log('Cleaning up Supabase subscriptions...');
+    subscriptions.forEach(subscription => {
+      if (subscription) {
+        supabase.removeChannel(subscription);
+      }
     });
-
-    setSocket(newSocket);
+    setSubscriptions([]);
+    setIsConnected(false);
   };
 
-  const disconnectSocket = () => {
-    if (socket) {
-      socket.disconnect();
-      setSocket(null);
-      setIsConnected(false);
-    }
+  // Helper functions for getting real-time data
+  const getActiveAlerts = () => {
+    return realtimeData.alerts.filter(alert =>
+      alert.status === 'open' || alert.status === 'acknowledged'
+    );
   };
 
-  const emitEvent = (event, data) => {
-    if (socket && isConnected) {
-      socket.emit(event, data);
-    } else {
-      console.warn('Socket not connected, cannot emit event:', event);
-    }
-  };
-
-  const joinRoom = (room) => {
-    emitEvent('join-room', room);
-  };
-
-  const leaveRoom = (room) => {
-    emitEvent('leave-room', room);
-  };
-
-  // Get latest sensor data
   const getSensorData = (sensorId) => {
     return realtimeData.sensors[sensorId] || null;
   };
 
-  // Get active alerts
-  const getActiveAlerts = () => {
-    return realtimeData.alerts.filter(alert => alert.status === 'active');
+  const getAllSensorsData = () => {
+    return realtimeData.sensors;
   };
 
-  // Get alerts by severity
-  const getAlertsBySeverity = (severity) => {
-    return realtimeData.alerts.filter(alert => 
-      alert.severity === severity && alert.status === 'active'
-    );
-  };
+  // Simulate real-time data for demo purposes when Supabase is not available
+  useEffect(() => {
+    if (!isConnected && isAuthenticated) {
+      const interval = setInterval(() => {
+        // Generate mock sensor data
+        const mockSensorData = {
+          sensor_001: {
+            value: 50 + 20 * Math.sin(Date.now() / 10000) + Math.random() * 10,
+            unit: 'vehicles/min',
+            timestamp: new Date().toISOString(),
+            status: 'active'
+          },
+          sensor_002: {
+            value: 80 + 15 * Math.sin(Date.now() / 15000) + Math.random() * 8,
+            unit: 'AQI',
+            timestamp: new Date().toISOString(),
+            status: 'active'
+          },
+          sensor_003: {
+            value: 3.5 + 1.5 * Math.sin(Date.now() / 20000) + Math.random() * 0.5,
+            unit: 'kWh',
+            timestamp: new Date().toISOString(),
+            status: 'active'
+          }
+        };
 
+        setRealtimeData(prev => ({
+          ...prev,
+          sensors: {
+            ...prev.sensors,
+            ...mockSensorData
+          },
+          stats: {
+            totalSensors: 34,
+            activeSensors: 32,
+            alerts: prev.alerts.length,
+            lastUpdate: new Date().toISOString()
+          }
+        }));
+      }, 5000); // Update every 5 seconds
+
+      return () => clearInterval(interval);
+    }
+  }, [isConnected, isAuthenticated]);
   const value = {
-    socket,
     isConnected,
     realtimeData,
-    emitEvent,
-    joinRoom,
-    leaveRoom,
-    getSensorData,
     getActiveAlerts,
-    getAlertsBySeverity,
-    connectSocket,
-    disconnectSocket
+    getSensorData,
+    getAllSensorsData,
+    // Legacy compatibility
+    socket: null,
+    emit: () => console.warn('Socket.io emit not available with Supabase'),
+    on: () => console.warn('Socket.io on not available with Supabase'),
+    off: () => console.warn('Socket.io off not available with Supabase')
   };
 
   return (
@@ -256,7 +250,6 @@ export function SocketProvider({ children }) {
     </SocketContext.Provider>
   );
 }
-
 export function useSocket() {
   const context = useContext(SocketContext);
   if (!context) {

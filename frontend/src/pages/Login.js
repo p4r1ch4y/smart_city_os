@@ -64,7 +64,7 @@ function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
-  const { login, register, isAuthenticated, isLoading } = useAuth();
+  const { login, register, isAuthenticated, isLoading, useStackAuth } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const location = useLocation();
 
@@ -94,20 +94,23 @@ function Login() {
 
   const onSubmit = async (data) => {
     try {
+      if (useStackAuth) {
+        // Delegate to auth context; it will redirect to Stack Auth
+        await login({ email: data.email, password: data.password });
+        return;
+      }
       if (isLogin) {
         const result = await login({
           email: data.email,
           password: data.password
         });
         if (!result.success) {
-          // Error is already handled in the auth context
           return;
         }
       } else {
         const { confirmPassword, ...registerData } = data;
         const result = await register(registerData);
         if (!result.success) {
-          // Error is already handled in the auth context
           return;
         }
       }

@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart City Management Platform</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="app">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon"></div>
+                    <span>SmartCity</span>
+                </div>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item active" data-section="dashboard">
+                    <span class="nav-icon">📊</span>
+                    <span>Dashboard</span>
+                </li>
+                <li class="nav-item" data-section="analytics">
+                    <span class="nav-icon">📈</span>
+                    <span>Analytics</span>
+                </li>
+                <li class="nav-item" data-section="sensors">
+                    <span class="nav-icon">📡</span>
+                    <span>IoT Sensors</span>
+                </li>
+                <li class="nav-item" data-section="alerts">
+                    <span class="nav-icon">🚨</span>
+                    <span>Alerts</span>
+                </li>
+                <li class="nav-item" data-section="services">
+                    <span class="nav-icon">🏢</span>
+                    <span>City Services</span>
+                </li>
+                <li class="nav-item" data-section="settings">
+                    <span class="nav-icon">⚙️</span>
+                    <span>Settings</span>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <h1>New York Smart City</h1>
+                    <p class="current-time" id="currentTime"></p>
+                </div>
+                <div class="header-right">
+                    <div class="weather-widget">
+                        <div class="weather-info">
+                            <span class="temperature">24°C</span>
+                            <span class="condition">Partly Cloudy</span>
+                        </div>
+                        <div class="weather-details">
+                            <span>Humidity: 62%</span>
+                            <span>Wind: 12 km/h</span>
+                        </div>
+                    </div>
+                    <div class="user-profile">
+                        <div class="avatar">👤</div>
+                        <span>Admin</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="section active">
+                <!-- Real-time Metrics Cards -->
+                <div class="metrics-grid">
+                    <div class="metric-card traffic" data-metric="traffic">
+                        <div class="metric-header">
+                            <h3>Traffic Flow</h3>
+                            <div class="metric-icon">🚗</div>
+                        </div>
+                        <div class="metric-value">
+                            <span class="value" id="trafficValue">67</span>
+                            <span class="unit">%</span>
+                        </div>
+                        <div class="metric-progress">
+                            <div class="progress-bar" id="trafficProgress"></div>
+                        </div>
+                        <div class="metric-trend">
+                            <span class="trend positive" id="trafficTrend">+2.3%</span>
+                            <span>vs yesterday</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card energy" data-metric="energy">
+                        <div class="metric-header">
+                            <h3>Energy Consumption</h3>
+                            <div class="metric-icon">⚡</div>
+                        </div>
+                        <div class="metric-value">
+                            <span class="value" id="energyValue">3.8</span>
+                            <span class="unit">MW</span>
+                        </div>
+                        <div class="circular-progress" id="energyCircle">
+                            <svg viewBox="0 0 36 36">
+                                <circle cx="18" cy="18" r="16" fill="none" stroke="rgba(0, 206, 209, 0.3)" stroke-width="2"/>
+                                <circle cx="18" cy="18" r="16" fill="none" stroke="#00CED1" stroke-width="2" 
+                                        stroke-dasharray="76 100" transform="rotate(-90 18 18)"/>
+                            </svg>
+                        </div>
+                        <div class="metric-trend">
+                            <span class="trend negative" id="energyTrend">-1.2%</span>
+                            <span>vs yesterday</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card air-quality" data-metric="airQuality">
+                        <div class="metric-header">
+                            <h3>Air Quality Index</h3>
+                            <div class="metric-icon">🌬️</div>
+                        </div>
+                        <div class="metric-value">
+                            <span class="value" id="airQualityValue">82</span>
+                            <span class="unit">AQI</span>
+                        </div>
+                        <div class="air-quality-status" id="airQualityStatus">Moderate</div>
+                        <div class="air-quality-details">
+                            <div class="detail">
+                                <span>PM2.5:</span>
+                                <span id="pm25">35 μg/m³</span>
+                            </div>
+                            <div class="detail">
+                                <span>NO2:</span>
+                                <span id="no2">42 μg/m³</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="metric-card water" data-metric="water">
+                        <div class="metric-header">
+                            <h3>Water Usage</h3>
+                            <div class="metric-icon">💧</div>
+                        </div>
+                        <div class="metric-value">
+                            <span class="value" id="waterValue">1045</span>
+                            <span class="unit">ML/day</span>
+                        </div>
+                        <div class="water-indicator">
+                            <div class="water-level" id="waterLevel"></div>
+                        </div>
+                        <div class="metric-trend">
+                            <span class="trend positive" id="waterTrend">+0.8%</span>
+                            <span>vs yesterday</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card waste" data-metric="waste">
+                        <div class="metric-header">
+                            <h3>Waste Management</h3>
+                            <div class="metric-icon">🗑️</div>
+                        </div>
+                        <div class="metric-value">
+                            <span class="value" id="wasteValue">73</span>
+                            <span class="unit">%</span>
+                        </div>
+                        <div class="waste-bins">
+                            <div class="bin">
+                                <div class="bin-fill" style="height: 73%"></div>
+                            </div>
+                            <div class="bin">
+                                <div class="bin-fill" style="height: 65%"></div>
+                            </div>
+                            <div class="bin">
+                                <div class="bin-fill" style="height: 80%"></div>
+                            </div>
+                        </div>
+                        <div class="metric-trend">
+                            <span class="trend positive" id="wasteTrend">+5.1%</span>
+                            <span>vs yesterday</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card population" data-metric="population">
+                        <div class="metric-header">
+                            <h3>Population Count</h3>
+                            <div class="metric-icon">👥</div>
+                        </div>
+                        <div class="metric-value">
+                            <span class="value" id="populationValue">2,847,395</span>
+                            <span class="unit">people</span>
+                        </div>
+                        <div class="population-animation">
+                            <div class="pulse-ring"></div>
+                            <div class="pulse-ring"></div>
+                            <div class="pulse-ring"></div>
+                        </div>
+                        <div class="metric-trend">
+                            <span class="trend positive" id="populationTrend">+0.02%</span>
+                            <span>vs yesterday</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts and Map Row -->
+                <div class="dashboard-row">
+                    <div class="chart-container">
+                        <h3>Traffic Flow Trends</h3>
+                        <div class="chart-wrapper" style="position: relative; height: 300px;">
+                            <canvas id="trafficChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="map-container">
+                        <h3>City Sensor Map</h3>
+                        <div class="city-map" id="cityMap">
+                            <div class="sensor-marker" data-sensor="T001" style="top: 20%; left: 30%;">
+                                <div class="marker-pulse"></div>
+                                <span class="marker-label">Traffic</span>
+                            </div>
+                            <div class="sensor-marker" data-sensor="A001" style="top: 50%; left: 60%;">
+                                <div class="marker-pulse"></div>
+                                <span class="marker-label">Air Quality</span>
+                            </div>
+                            <div class="sensor-marker" data-sensor="W001" style="top: 70%; left: 20%;">
+                                <div class="marker-pulse"></div>
+                                <span class="marker-label">Water</span>
+                            </div>
+                            <div class="sensor-marker warning" data-sensor="E001" style="top: 30%; left: 80%;">
+                                <div class="marker-pulse"></div>
+                                <span class="marker-label">Energy</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alerts Panel -->
+                <div class="alerts-panel">
+                    <h3>Recent Alerts</h3>
+                    <div class="alert-list" id="alertList">
+                        <div class="alert-item warning">
+                            <div class="alert-icon">⚠️</div>
+                            <div class="alert-content">
+                                <p>High traffic congestion detected on Highway 101</p>
+                                <span class="alert-time">5 min ago</span>
+                            </div>
+                        </div>
+                        <div class="alert-item info">
+                            <div class="alert-icon">ℹ️</div>
+                            <div class="alert-content">
+                                <p>Street light maintenance scheduled for tonight</p>
+                                <span class="alert-time">15 min ago</span>
+                            </div>
+                        </div>
+                        <div class="alert-item error">
+                            <div class="alert-icon">🚨</div>
+                            <div class="alert-content">
+                                <p>Power grid anomaly in Sector 7</p>
+                                <span class="alert-time">32 min ago</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Analytics Section -->
+            <section id="analytics" class="section">
+                <h2>City Analytics</h2>
+                <div class="analytics-grid">
+                    <div class="analytics-card">
+                        <h3>Energy Distribution</h3>
+                        <div class="chart-wrapper" style="position: relative; height: 250px;">
+                            <canvas id="energyChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="analytics-card">
+                        <h3>Air Quality Trends</h3>
+                        <div class="chart-wrapper" style="position: relative; height: 250px;">
+                            <canvas id="airQualityChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- IoT Sensors Section -->
+            <section id="sensors" class="section">
+                <h2>IoT Sensors Network</h2>
+                <div class="sensors-grid" id="sensorsGrid">
+                    <!-- Sensors will be populated by JavaScript -->
+                </div>
+            </section>
+
+            <!-- Alerts Section -->
+            <section id="alerts" class="section">
+                <h2>Alerts & Notifications</h2>
+                <div class="alerts-container">
+                    <div class="alerts-filter">
+                        <button class="filter-btn active" data-type="all">All</button>
+                        <button class="filter-btn" data-type="warning">Warnings</button>
+                        <button class="filter-btn" data-type="error">Critical</button>
+                        <button class="filter-btn" data-type="info">Info</button>
+                    </div>
+                    <div class="alerts-list" id="alertsFullList">
+                        <!-- Alerts will be populated by JavaScript -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- City Services Section -->
+            <section id="services" class="section">
+                <h2>City Services Control</h2>
+                <div class="services-grid">
+                    <div class="service-control">
+                        <h3>Street Lighting</h3>
+                        <div class="control-panel">
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="streetLights" checked>
+                                <label for="streetLights"></label>
+                            </div>
+                            <span class="control-status">Active</span>
+                        </div>
+                        <div class="service-stats">
+                            <span>4,832 lights operational</span>
+                        </div>
+                    </div>
+
+                    <div class="service-control">
+                        <h3>Traffic Signals</h3>
+                        <div class="control-panel">
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="trafficSignals" checked>
+                                <label for="trafficSignals"></label>
+                            </div>
+                            <span class="control-status">Active</span>
+                        </div>
+                        <div class="service-stats">
+                            <span>1,247 signals synchronized</span>
+                        </div>
+                    </div>
+
+                    <div class="service-control">
+                        <h3>Water Distribution</h3>
+                        <div class="control-panel">
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="waterSystems" checked>
+                                <label for="waterSystems"></label>
+                            </div>
+                            <span class="control-status">Active</span>
+                        </div>
+                        <div class="service-stats">
+                            <span>98% system efficiency</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section id="settings" class="section">
+                <h2>System Settings</h2>
+                <div class="settings-content">
+                    <div class="settings-group">
+                        <h3>Data Refresh Rate</h3>
+                        <select id="refreshRate" class="form-control">
+                            <option value="2000">2 seconds</option>
+                            <option value="3000" selected>3 seconds</option>
+                            <option value="5000">5 seconds</option>
+                            <option value="10000">10 seconds</option>
+                        </select>
+                    </div>
+                    <div class="settings-group">
+                        <h3>Notifications</h3>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="notifications" checked>
+                            <label for="notifications"></label>
+                        </div>
+                    </div>
+                    <div class="settings-group">
+                        <h3>Theme</h3>
+                        <select id="theme" class="form-control">
+                            <option value="dark" selected>Dark Mode</option>
+                            <option value="light">Light Mode</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

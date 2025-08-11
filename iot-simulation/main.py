@@ -31,7 +31,9 @@ class SmartCitySimulator:
     
     def __init__(self):
         self.sensors: List = []
-        self.api_client = BatchAPIClient(Config.API_ENDPOINT, batch_size=5)
+        # Use service account token for authentication
+        auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJiNWE3ZmFhMi1mYmJkLTQ4ODUtOWUzOC1lYTdhMzRlZWMyNTYiLCJpYXQiOjE3NTQ3MjQwNTYsImV4cCI6MTc1NDgxMDQ1Nn0.S53ztuAgHiXoomq6eHJVL2kRxmswrC675ir2f41Rqnc"
+        self.api_client = BatchAPIClient(Config.API_ENDPOINT, batch_size=5, auth_token=auth_token)
         self.running = False
         self.stats_thread = None
         self.simulation_start_time = None

@@ -10,7 +10,7 @@ init(autoreset=True)
 class SmartCityAPIClient:
     """API client for communicating with Smart City OS backend"""
     
-    def __init__(self, base_url: str, timeout: int = 30):
+    def __init__(self, base_url: str, timeout: int = 30, auth_token: str = None):
         self.base_url = base_url.rstrip('/')
         self.timeout = timeout
         self.session = requests.Session()
@@ -18,6 +18,12 @@ class SmartCityAPIClient:
             'Content-Type': 'application/json',
             'User-Agent': 'SmartCity-IoT-Simulator/1.0'
         })
+
+        # Add authentication if token provided
+        if auth_token:
+            self.session.headers.update({
+                'Authorization': f'Bearer {auth_token}'
+            })
         
         # Statistics
         self.stats = {
@@ -163,8 +169,8 @@ class SmartCityAPIClient:
 class BatchAPIClient(SmartCityAPIClient):
     """Extended API client with batch operations"""
     
-    def __init__(self, base_url: str, timeout: int = 30, batch_size: int = 10):
-        super().__init__(base_url, timeout)
+    def __init__(self, base_url: str, timeout: int = 30, batch_size: int = 10, auth_token: str = None):
+        super().__init__(base_url, timeout, auth_token)
         self.batch_size = batch_size
         self.pending_data = []
     

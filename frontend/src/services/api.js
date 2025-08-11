@@ -1,8 +1,15 @@
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import {
+  sensorService as supabaseSensorService,
+  alertService as supabaseAlertService,
+  analyticsService as supabaseAnalyticsService,
+  blockchainService as supabaseBlockchainService
+} from './supabaseApi';
 
 // Base API configuration
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
+const USE_STACK_AUTH = (process.env.REACT_APP_USE_STACK_AUTH || process.env.USE_STACK_AUTH) === 'true';
 
 // Create axios instances
 export const authAPI = axios.create({
@@ -46,6 +53,12 @@ api.interceptors.response.use(
 
       try {
         const tokens = JSON.parse(localStorage.getItem('tokens') || 'null');
+        if (USE_STACK_AUTH) {
+          // With Stack Auth, no backend refresh endpoint; redirect to login
+          localStorage.removeItem('tokens');
+          window.location.href = '/login';
+          return Promise.reject(error);
+        }
         if (tokens?.refreshToken) {
           const response = await authAPI.post('/auth/refresh', {
             refreshToken: tokens.refreshToken
@@ -53,11 +66,11 @@ api.interceptors.response.use(
 
           const newTokens = response.data.tokens;
           localStorage.setItem('tokens', JSON.stringify(newTokens));
-          
+
           // Update the authorization header
           originalRequest.headers.Authorization = `Bearer ${newTokens.accessToken}`;
           api.defaults.headers.common['Authorization'] = `Bearer ${newTokens.accessToken}`;
-          
+
           return api(originalRequest);
         }
       } catch (refreshError) {
@@ -93,106 +106,17 @@ export const authService = {
   updateProfile: (updates) => api.put('/auth/profile', updates),
 };
 
-// Sensor API methods
-export const sensorService = {
-  // Get all sensors
-  getSensors: (params = {}) => {
-    const queryParams = new URLSearchParams();
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        queryParams.append(key, value);
-      }
-    });
-    return api.get(`/sensors?${queryParams.toString()}`);
-  },
+// Sensor API methods - now using Supabase
+export const sensorService = supabaseSensorService;
 
-  // Get sensor by ID
-  getSensor: (id) => api.get(`/sensors/${id}`),
+// Alert API methods - now using Supabase
+export const alertService = supabaseAlertService;
 
-  // Create new sensor
-  createSensor: (sensorData) => api.post('/sensors', sensorData),
+// Analytics API methods - now using Supabase
+export const analyticsService = supabaseAnalyticsService;
 
-  // Update sensor
-  updateSensor: (id, updates) => api.put(`/sensors/${id}`, updates),
-
-  // Delete sensor
-  deleteSensor: (id) => api.delete(`/sensors/${id}`),
-
-  // Submit sensor data
-  submitSensorData: (data) => api.post('/sensors/data', data),
-
-  // Get sensor data history
-  getSensorData: (sensorId, params = {}) => {
-    const queryParams = new URLSearchParams();
-    queryParams.append('sensorId', sensorId);
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        queryParams.append(key, value);
-      }
-    });
-    return api.get(`/sensors/data?${queryParams.toString()}`);
-  },
-
-  // Get aggregated sensor data
-  getAggregatedData: (sensorId, interval = 'hour', startTime, endTime) => {
-    const params = { sensorId, interval };
-    if (startTime) params.startTime = startTime;
-    if (endTime) params.endTime = endTime;
-    
-    const queryParams = new URLSearchParams(params);
-    return api.get(`/sensors/aggregated?${queryParams.toString()}`);
-  }
-};
-
-// Alert API methods
-export const alertService = {
-  // Get all alerts
-  getAlerts: (params = {}) => {
-    const queryParams = new URLSearchParams();
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        queryParams.append(key, value);
-      }
-    });
-    return api.get(`/alerts?${queryParams.toString()}`);
-  },
-
-  // Get alert by ID
-  getAlert: (id) => api.get(`/alerts/${id}`),
-
-  // Get alert statistics
-  getAlertStats: (timeRange = '24h') => api.get(`/alerts/stats?timeRange=${timeRange}`),
-
-  // Acknowledge alert
-  acknowledgeAlert: (id, notes) => api.post(`/alerts/${id}/acknowledge`, { notes }),
-
-  // Resolve alert
-  resolveAlert: (id, notes) => api.post(`/alerts/${id}/resolve`, { notes }),
-
-  // Dismiss alert
-  dismissAlert: (id, notes) => api.post(`/alerts/${id}/dismiss`, { notes }),
-};
-
-// Analytics API methods (placeholder for future implementation)
-export const analyticsService = {
-  // Get dashboard statistics
-  getDashboardStats: () => api.get('/analytics/dashboard'),
-
-  // Get traffic predictions
-  getTrafficPredictions: (sensorId, hours = 24) => 
-    api.get(`/analytics/traffic/predictions?sensorId=${sensorId}&hours=${hours}`),
-
-  // Get air quality forecast
-  getAirQualityForecast: (sensorId, days = 7) => 
-    api.get(`/analytics/air-quality/forecast?sensorId=${sensorId}&days=${days}`),
-
-  // Get waste collection optimization
-  getWasteOptimization: () => api.get('/analytics/waste/optimization'),
-
-  // Get energy consumption analysis
-  getEnergyAnalysis: (timeRange = '7d') => 
-    api.get(`/analytics/energy/analysis?timeRange=${timeRange}`),
-};
+// Blockchain API methods - now using Supabase
+export const blockchainService = supabaseBlockchainService;
 
 // Utility functions
 export const apiUtils = {

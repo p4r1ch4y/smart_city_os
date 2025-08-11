@@ -1,11 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { 
-  ExclamationTriangleIcon,
-  ClockIcon,
-  MapPinIcon,
-  CheckCircleIcon
-} from '@heroicons/react/24/outline';
+import { Icon, StatusIcon } from './icons';
 
 function AlertsList({ alerts = [], compact = false, onAlertClick }) {
   const getSeverityColor = (severity) => {
@@ -21,13 +16,13 @@ function AlertsList({ alerts = [], compact = false, onAlertClick }) {
   const getSeverityIcon = (severity) => {
     switch (severity) {
       case 'critical':
-        return <ExclamationTriangleIcon className="w-5 h-5" />;
+        return <Icon name="error" size={20} />;
       case 'high':
-        return <ExclamationTriangleIcon className="w-5 h-5" />;
+        return <Icon name="warning" size={20} />;
       case 'medium':
-        return <ExclamationTriangleIcon className="w-5 h-5" />;
+        return <Icon name="info" size={20} />;
       default:
-        return <ExclamationTriangleIcon className="w-5 h-5" />;
+        return <Icon name="info" size={20} />;
     }
   };
 
@@ -48,7 +43,7 @@ function AlertsList({ alerts = [], compact = false, onAlertClick }) {
   if (alerts.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-8 text-gray-500 dark:text-gray-400">
-        <CheckCircleIcon className="w-12 h-12 mb-4 opacity-50" />
+        <Icon name="success" size={48} className="mb-4 opacity-50" />
         <p className="text-sm font-medium">No active alerts</p>
         <p className="text-xs">All systems are operating normally</p>
       </div>
@@ -90,16 +85,16 @@ function AlertsList({ alerts = [], compact = false, onAlertClick }) {
                     {/* Sensor info */}
                     {alert.sensor && (
                       <div className="flex items-center space-x-1">
-                        <MapPinIcon className="w-3 h-3 opacity-60" />
+                        <Icon name="location" size={12} className="opacity-60" />
                         <span className="text-xs opacity-80 truncate">
                           {alert.sensor.name}
                         </span>
                       </div>
                     )}
-                    
+
                     {/* Timestamp */}
                     <div className="flex items-center space-x-1">
-                      <ClockIcon className="w-3 h-3 opacity-60" />
+                      <Icon name="time" size={12} className="opacity-60" />
                       <span className="text-xs opacity-80">
                         {formatTimeAgo(alert.createdAt)}
                       </span>

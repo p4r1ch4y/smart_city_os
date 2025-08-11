@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { useCity } from '../contexts/CityContext';
 
 // Fix for default markers in React Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -56,10 +57,13 @@ const createSensorIcon = (type, status = 'active') => {
   });
 };
 
+
 // Component to fit map bounds to sensors
 function MapBounds({ sensors }) {
   const map = useMap();
   
+  const { city } = useCity();
+
   useEffect(() => {
     if (sensors.length > 0) {
       const bounds = L.latLngBounds(
@@ -69,17 +73,22 @@ function MapBounds({ sensors }) {
         ])
       );
       map.fitBounds(bounds, { padding: [20, 20] });
+    } else {
+      // Fit to city bounds if no sensors
+      const b = city.bounds;
+      const bounds = L.latLngBounds([[b.south, b.west], [b.north, b.east]]);
+      map.fitBounds(bounds, { padding: [20, 20] });
     }
-  }, [sensors, map]);
+  }, [sensors, map, city]);
   
   return null;
 }
 
 function SensorMap({ sensors = [], realtimeData = {}, height = 400 }) {
   const mapRef = useRef();
+  const { city } = useCity();
 
-  // Default center (NYC)
-  const defaultCenter = [40.7589, -73.9851];
+  const defaultCenter = city.center;
   const defaultZoom = 12;
 
   const formatSensorData = (sensor, realtime) => {

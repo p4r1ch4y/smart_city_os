@@ -12,6 +12,7 @@ const sensorRoutes = require('./routes/sensors');
 const alertRoutes = require('./routes/alerts');
 const { authMiddleware } = require('./middleware/auth');
 const { rateLimiterMiddleware } = require('./middleware/rateLimiter');
+const blockchainService = require('./services/blockchainService');
 
 const app = express();
 const server = http.createServer(app);
@@ -56,8 +57,9 @@ app.get('/health', async (req, res) => {
 
 // API Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/sensors', sensorRoutes);
-app.use('/api/alerts', alertRoutes);
+app.use('/api/sensors', authMiddleware, sensorRoutes);
+app.use('/api/alerts', authMiddleware, alertRoutes);
+app.use('/api/blockchain', require('./routes/blockchain'));
 
 // WebSocket connection handling
 io.on('connection', (socket) => {
@@ -132,10 +134,21 @@ const startServer = async () => {
     await sequelize.sync({ force: false });
     console.log('Database synchronized.');
 
+    // Initialize blockchain service
+    try {
+      await blockchainService.initialize();
+      console.log('✅ Blockchain service initialized successfully.');
+    } catch (blockchainError) {
+      console.warn('⚠️ Blockchain service initialization failed:', blockchainError.message);
+      console.warn('⚠️ Continuing without blockchain logging...');
+    }
+
     server.listen(PORT, () => {
-      console.log(`Smart City OS Server running on port ${PORT}`);
-      console.log(`Environment: ${process.env.NODE_ENV}`);
-      console.log(`Health check: http://localhost:${PORT}/health`);
+      console.log(`🚀 Smart City OS Server running on port ${PORT}`);
+      console.log(`📊 Environment: ${process.env.NODE_ENV}`);
+      console.log(`🔗 Health check: http://localhost:${PORT}/health`);
+      console.log(`🤖 Analytics Service: http://localhost:5000`);
+      console.log(`⛓️ Blockchain Service: ${blockchainService.getServiceStatus().initialized ? 'Active' : 'Inactive'}`);
     });
   } catch (error) {
     console.error('Unable to start server after DB connection:', error.message || error);

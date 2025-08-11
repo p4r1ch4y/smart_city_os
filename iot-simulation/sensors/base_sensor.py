@@ -165,6 +165,5 @@ class BaseSensor(ABC):
             'name': self.name,
             'type': self.sensor_type,
             'location': self.location,
-            'metadata': self.metadata,
-            'status': self.status
+            'metadata': self.metadata
         }

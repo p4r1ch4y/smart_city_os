@@ -14,10 +14,13 @@ import {
 } from '@heroicons/react/24/outline';
 import { Menu, Transition } from '@headlessui/react';
 
+import { useCity } from '../contexts/CityContext';
+
 function Header({ onMenuClick }) {
   const { user, logout } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const { getActiveAlerts, getAlertsBySeverity } = useSocket();
+  const { cityKey, setCity, cities } = useCity();
   const [showNotifications, setShowNotifications] = useState(false);
 
   const activeAlerts = getActiveAlerts();
@@ -48,13 +51,23 @@ function Header({ onMenuClick }) {
                 Smart City Dashboard
               </h1>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Real-time city monitoring and management
+                {`Real-time monitoring • ${cityKey}`}
               </p>
             </div>
           </div>
 
           {/* Right side */}
           <div className="flex items-center space-x-4">
+            {/* City selector */}
+            <select
+              value={cityKey}
+              onChange={(e) => setCity(e.target.value)}
+              className="hidden md:block bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-3 py-1.5 rounded-md text-sm"
+              title="Select City"
+            >
+              {cities.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+
             {/* Theme toggle */}
             <button
               onClick={toggleTheme}
