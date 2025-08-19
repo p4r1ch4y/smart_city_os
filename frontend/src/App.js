@@ -19,6 +19,7 @@ const Analytics = lazy(() => import('./pages/Analytics'));
 const Services = lazy(() => import('./pages/Services'));
 const Settings = lazy(() => import('./pages/Settings'));
 const Profile = lazy(() => import('./pages/Profile'));
+const Blockchain = lazy(() => import('./pages/Blockchain'));
 
 function App() {
   return (
@@ -46,6 +47,7 @@ function App() {
                   <Route path="/alerts" element={<Alerts />} />
                   <Route path="/analytics" element={<Analytics />} />
                   <Route path="/services" element={<Services />} />
+                  <Route path="/blockchain" element={<Blockchain />} />
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/profile" element={<Profile />} />
                 </Route>

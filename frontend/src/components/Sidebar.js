@@ -10,6 +10,7 @@ const navigation = [
   { name: 'Analytics', href: '/analytics', icon: 'analytics', section: 'analytics' },
   { name: 'IoT Sensors', href: '/sensors', icon: 'sensors', section: 'sensors' },
   { name: 'Alerts', href: '/alerts', icon: 'alerts', section: 'alerts' },
+  { name: 'Blockchain', href: '/blockchain', icon: 'blockchain', section: 'blockchain' },
   { name: 'City Services', href: '/services', icon: 'services', section: 'services' },
   { name: 'Settings', href: '/settings', icon: 'settings', section: 'settings' },
 ];
