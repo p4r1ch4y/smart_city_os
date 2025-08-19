@@ -320,5 +320,4 @@ p {
 .content-wrapper {
   flex: 1;
   overflow-y: auto;
-  padding: var(--space-24);
 }

@@ -30,14 +30,30 @@ const generateTokens = (userId) => {
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
   );
-  
+
   const refreshToken = jwt.sign(
     { userId, type: 'refresh' },
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d' }
   );
-  
+
   return { accessToken, refreshToken };
+};
+
+// Helper function to generate service tokens
+const generateServiceToken = (serviceId, serviceName) => {
+  const serviceToken = jwt.sign(
+    {
+      userId: serviceId,
+      serviceId,
+      serviceName,
+      type: 'service'
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: '365d' } // Long-lived service token
+  );
+
+  return serviceToken;
 };
 
 // Register endpoint
@@ -223,6 +239,61 @@ router.post('/logout', authMiddleware, async (req, res) => {
     console.error('Logout error:', error);
     res.status(500).json({
       error: 'Logout failed',
+      message: 'Internal server error'
+    });
+  }
+});
+
+// IoT Service Authentication - generates a service token for IoT simulation
+router.post('/iot-service', async (req, res) => {
+  try {
+    const { serviceKey } = req.body;
+
+    // Check if the service key matches the expected IoT service key
+    const expectedServiceKey = process.env.IOT_SERVICE_KEY || 'iot-service-key-2024';
+
+    if (serviceKey !== expectedServiceKey) {
+      return res.status(401).json({
+        error: 'Invalid service key',
+        message: 'Unauthorized IoT service access'
+      });
+    }
+
+    // Find or create IoT service user
+    let iotUser = await User.findOne({ where: { email: 'iot-service@smartcity.local' } });
+
+    if (!iotUser) {
+      iotUser = await User.create({
+        username: 'iotservice',
+        email: 'iot-service@smartcity.local',
+        password: Math.random().toString(36).slice(2, 12), // Random password
+        firstName: 'IoT',
+        lastName: 'Service',
+        role: 'admin', // Give admin role for sensor management
+        department: 'IoT Services',
+        isActive: true
+      });
+    }
+
+    // Generate service token
+    const serviceToken = generateServiceToken(iotUser.id, 'iot-service');
+
+    res.json({
+      message: 'IoT service authenticated successfully',
+      token: serviceToken,
+      user: {
+        id: iotUser.id,
+        username: iotUser.username,
+        email: iotUser.email,
+        role: iotUser.role,
+        department: iotUser.department
+      }
+    });
+
+  } catch (error) {
+    console.error('IoT service auth error:', error);
+    res.status(500).json({
+      error: 'Authentication failed',
       message: 'Internal server error'
     });
   }

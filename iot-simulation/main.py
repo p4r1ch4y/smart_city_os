@@ -9,6 +9,8 @@ import signal
 import sys
 import time
 import random
+import os
+import requests
 from datetime import datetime
 from typing import List, Dict
 from concurrent.futures import ThreadPoolExecutor
@@ -16,12 +18,16 @@ import threading
 
 from colorama import Fore, Style, init
 import click
+from dotenv import load_dotenv
 
 from config import Config, get_random_location
 from api_client import BatchAPIClient
 from sensors.traffic_sensor import TrafficSensor, ParkingSensor
 from sensors.environmental_sensors import AirQualitySensor, NoiseSensor, WaterQualitySensor
 from sensors.utility_sensors import WasteSensor, EnergySensor
+
+# Load environment variables
+load_dotenv()
 
 # Initialize colorama
 init(autoreset=True)
@@ -31,8 +37,8 @@ class SmartCitySimulator:
     
     def __init__(self):
         self.sensors: List = []
-        # Use service account token for authentication
-        auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJiNWE3ZmFhMi1mYmJkLTQ4ODUtOWUzOC1lYTdhMzRlZWMyNTYiLCJpYXQiOjE3NTQ3MjQwNTYsImV4cCI6MTc1NDgxMDQ1Nn0.S53ztuAgHiXoomq6eHJVL2kRxmswrC675ir2f41Rqnc"
+        # Get authentication token from environment or request new one
+        auth_token = self._get_auth_token()
         self.api_client = BatchAPIClient(Config.API_ENDPOINT, batch_size=5, auth_token=auth_token)
         self.running = False
         self.stats_thread = None
@@ -48,6 +54,46 @@ class SmartCitySimulator:
             'waste': WasteSensor,
             'energy': EnergySensor
         }
+
+    def _get_auth_token(self):
+        """Get authentication token from environment or request new one"""
+        # First try to get token from environment
+        token = os.getenv('IOT_AUTH_TOKEN')
+        if token:
+            print(f"{Fore.GREEN}Using authentication token from environment{Style.RESET_ALL}")
+            return token
+
+        # If no token in environment, request one from the service
+        try:
+            print(f"{Fore.YELLOW}Requesting IoT service authentication token...{Style.RESET_ALL}")
+            response = requests.post(
+                f"{Config.API_ENDPOINT}/api/auth/iot-service",
+                json={"serviceKey": os.getenv('IOT_SERVICE_KEY', 'iot-service-key-2024')},
+                timeout=10
+            )
+
+            if response.status_code == 200:
+                token = response.json()['token']
+                print(f"{Fore.GREEN}Successfully obtained IoT service token{Style.RESET_ALL}")
+
+                # Save token to .env file for future use
+                try:
+                    with open('.env', 'w') as f:
+                        f.write(f'IOT_AUTH_TOKEN={token}\n')
+                    print(f"{Fore.GREEN}Token saved to .env file{Style.RESET_ALL}")
+                except Exception as e:
+                    print(f"{Fore.YELLOW}Warning: Could not save token to .env file: {e}{Style.RESET_ALL}")
+
+                return token
+            else:
+                print(f"{Fore.RED}Failed to get IoT service token: {response.status_code} - {response.text}{Style.RESET_ALL}")
+
+        except Exception as e:
+            print(f"{Fore.RED}Error requesting IoT service token: {e}{Style.RESET_ALL}")
+
+        # Fallback to None - the API client will handle this gracefully
+        print(f"{Fore.YELLOW}Warning: Running without authentication token{Style.RESET_ALL}")
+        return None
     
     def create_sensors(self):
         """Create all sensors based on configuration"""

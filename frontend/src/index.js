@@ -1,9 +1,12 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import './polyfills';
 import './index.css';
 import App from './App';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { Toaster } from 'react-hot-toast';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -44,6 +47,18 @@ root.render(
             },
           },
         }}
+      />
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
       />
     </QueryClientProvider>
   </React.StrictMode>

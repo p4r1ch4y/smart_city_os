@@ -217,40 +217,116 @@ router.get('/analytics', authMiddleware, async (req, res) => {
 });
 
 /**
- * @route GET /api/blockchain/explorer/:transactionId
- * @desc Get transaction details for blockchain explorer
+ * @route POST /api/blockchain/verify-account
+ * @desc Verify account existence and data on Solana blockchain
  * @access Public
  */
-router.get('/explorer/:transactionId', async (req, res) => {
+router.post('/verify-account', async (req, res) => {
   try {
-    const { transactionId } = req.params;
+    const { location, sensorId } = req.body;
     
-    // Simulate blockchain explorer data
-    const transactionDetails = {
-      transactionId,
-      blockHeight: Math.floor(Date.now() / 1000),
-      timestamp: Date.now(),
-      status: 'confirmed',
-      network: 'solana-devnet',
-      explorerUrl: `https://explorer.solana.com/tx/${transactionId}?cluster=devnet`,
-      gasUsed: '0.000005 SOL',
-      confirmations: 32,
-      blockHash: `block_${Math.random().toString(36).substring(7)}`,
-      from: 'SmartCityOS_Logger',
-      to: 'Solana_Network',
-      dataHash: `0x${Math.random().toString(16).substring(2, 66)}`,
-      size: '256 bytes'
-    };
+    if (!location || !sensorId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Location and sensor ID are required'
+      });
+    }
     
-    res.json({
-      success: true,
-      data: transactionDetails
-    });
+    const result = await blockchainService.getAccountInfo(location, sensorId);
+    
+    if (result.success !== false) {
+      res.json({
+        success: true,
+        data: result
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        error: result.error
+      });
+    }
   } catch (error) {
-    console.error('Transaction details error:', error);
+    console.error('Account verification error:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to get transaction details'
+      error: 'Failed to verify account'
+    });
+  }
+});
+
+/**
+ * @route POST /api/blockchain/initialize-air-quality
+ * @desc Initialize air quality account on blockchain
+ * @access Private
+ */
+router.post('/initialize-air-quality', authMiddleware, async (req, res) => {
+  try {
+    const { location, sensorId } = req.body;
+    
+    if (!location || !sensorId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Location and sensor ID are required'
+      });
+    }
+    
+    const result = await blockchainService.initializeAirQuality(location, sensorId);
+    
+    res.json({
+      success: result.success,
+      data: result.success ? {
+        pda: result.pda,
+        message: result.message,
+        existed: result.existed || false,
+        location,
+        sensorId
+      } : null,
+      error: result.success ? null : result.error
+    });
+  } catch (error) {
+    console.error('Air quality initialization error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to initialize air quality account'
+    });
+  }
+});
+
+/**
+ * @route POST /api/blockchain/initialize-contract
+ * @desc Initialize smart contract on blockchain
+ * @access Private
+ */
+router.post('/initialize-contract', authMiddleware, async (req, res) => {
+  try {
+    const { name, description, contractType } = req.body;
+    
+    if (!name || !description || !contractType) {
+      return res.status(400).json({
+        success: false,
+        error: 'Name, description, and contract type are required'
+      });
+    }
+    
+    const result = await blockchainService.initializeContract(name, description, contractType);
+    
+    res.json({
+      success: result.success,
+      data: result.success ? {
+        pda: result.pda,
+        message: result.message,
+        existed: result.existed || false,
+        name,
+        description,
+        contractType
+      } : null,
+      error: result.success ? null : result.error
+    });
+  } catch (error) {
+    console.error('Contract initialization error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to initialize contract'
     });
   }
 });

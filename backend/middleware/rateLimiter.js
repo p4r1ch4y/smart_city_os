@@ -25,6 +25,15 @@ const loginRateLimiter = new RateLimiterMemory({
 
 const rateLimiterMiddleware = async (req, res, next) => {
   try {
+    // Bypass rate limiting for admin user
+    const adminEmail = 'iamcsubrata@gmail.com';
+    const userEmail = req.body?.email || req.user?.email;
+
+    if (userEmail === adminEmail) {
+      console.log('🔓 Rate limiting bypassed for admin user:', userEmail);
+      return next();
+    }
+
     await rateLimiter.consume(req.ip);
     next();
   } catch (rejRes) {
@@ -40,6 +49,15 @@ const rateLimiterMiddleware = async (req, res, next) => {
 
 const authRateLimiterMiddleware = async (req, res, next) => {
   try {
+    // Bypass rate limiting for admin user
+    const adminEmail = 'iamcsubrata@gmail.com';
+    const userEmail = req.body?.email || req.user?.email;
+
+    if (userEmail === adminEmail) {
+      console.log('🔓 Auth rate limiting bypassed for admin user:', userEmail);
+      return next();
+    }
+
     await authRateLimiter.consume(req.ip);
     next();
   } catch (rejRes) {
@@ -55,6 +73,15 @@ const authRateLimiterMiddleware = async (req, res, next) => {
 
 const loginRateLimiterMiddleware = async (req, res, next) => {
   try {
+    // Bypass rate limiting for admin user
+    const adminEmail = 'iamcsubrata@gmail.com';
+    const userEmail = req.body?.email || req.body?.username;
+
+    if (userEmail === adminEmail) {
+      console.log('🔓 Login rate limiting bypassed for admin user:', userEmail);
+      return next();
+    }
+
     await loginRateLimiter.consume(`${req.ip}_${req.body.email || req.body.username || 'unknown'}`);
     next();
   } catch (rejRes) {

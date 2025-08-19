@@ -1,5 +1,15 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase, supabaseHelpers } from '../lib/supabase';
+import {
+  isDemoAccount,
+  authenticateDemoUser,
+  getDemoUserProfile,
+  storeDemoSession,
+  getDemoSession,
+  clearDemoSession,
+  onDemoAuthStateChange,
+  triggerDemoAuthStateChange
+} from '../lib/demoAuth';
 import toast from 'react-hot-toast';
 
 const AuthContext = createContext({});
@@ -20,10 +30,10 @@ export const AuthProvider = ({ children }) => {
     // Get initial session
     getInitialSession();
 
-    // Listen for auth changes
+    // Listen for Supabase auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session);
+        console.log('Supabase auth state changed:', event, session);
 
         if (session?.user) {
           await handleUserSession(session);
@@ -37,13 +47,38 @@ export const AuthProvider = ({ children }) => {
       }
     );
 
+    // Listen for demo auth changes
+    const demoUnsubscribe = onDemoAuthStateChange(async (event, session) => {
+      console.log('Demo auth state changed:', event, session);
+
+      if (session?.user) {
+        await handleDemoUserSession(session);
+      } else {
+        setUser(null);
+        setSession(null);
+        setIsAuthenticated(false);
+      }
+
+      setLoading(false);
+    });
+
     return () => {
       subscription?.unsubscribe();
+      demoUnsubscribe();
     };
   }, []);
 
   const getInitialSession = async () => {
     try {
+      // First check for demo session
+      const demoSession = getDemoSession();
+      if (demoSession) {
+        console.log('Found demo session:', demoSession.user.email);
+        await handleDemoUserSession(demoSession);
+        return;
+      }
+
+      // Then check Supabase session
       const { data: { session }, error } = await supabase.auth.getSession();
 
       if (error) {
@@ -103,10 +138,71 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const handleDemoUserSession = async (session) => {
+    try {
+      setSession(session);
+
+      // Get demo user profile
+      const { data: userProfile, error } = getDemoUserProfile(session.user.id);
+
+      if (error) {
+        console.error('Error fetching demo user profile:', error);
+      }
+
+      // Combine auth user data with profile data
+      const userData = {
+        id: session.user.id,
+        email: session.user.email,
+        firstName: userProfile?.first_name || session.user.user_metadata?.first_name || '',
+        lastName: userProfile?.last_name || session.user.user_metadata?.last_name || '',
+        role: userProfile?.role || 'viewer',
+        department: userProfile?.department || '',
+        phone: userProfile?.phone || '',
+        avatarUrl: userProfile?.avatar_url || session.user.user_metadata?.avatar_url || '',
+        isActive: userProfile?.is_active !== false,
+        lastLogin: new Date().toISOString(),
+        createdAt: userProfile?.created_at || session.user.created_at,
+        isDemoUser: true
+      };
+
+      setUser(userData);
+      setIsAuthenticated(true);
+
+      console.log('Demo user session established:', userData.email);
+    } catch (error) {
+      console.error('Error handling demo user session:', error);
+    }
+  };
+
   const login = async (credentials) => {
     try {
       setLoading(true);
       const { email, password } = credentials;
+
+      // Check if this is a demo account
+      if (isDemoAccount(email)) {
+        console.log('Attempting demo login for:', email);
+        const result = authenticateDemoUser(email, password);
+
+        if (!result.success) {
+          toast.error(result.error || 'Demo login failed');
+          return {
+            success: false,
+            error: result.error || 'Demo login failed'
+          };
+        }
+
+        // Store demo session
+        storeDemoSession(result.data.session);
+
+        // Trigger demo auth state change
+        triggerDemoAuthStateChange('SIGNED_IN', result.data.session);
+
+        toast.success('Welcome to the demo!');
+        return { success: true, data: result.data };
+      }
+
+      // Regular Supabase authentication
       const { data, error } = await supabaseHelpers.signIn(email, password);
 
       if (error) {
@@ -173,10 +269,18 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       setLoading(true);
-      const { error } = await supabaseHelpers.signOut();
 
-      if (error) {
-        console.error('Logout error:', error);
+      // Check if this is a demo user
+      if (user?.isDemoUser) {
+        console.log('Demo user logout');
+        clearDemoSession();
+        triggerDemoAuthStateChange('SIGNED_OUT', null);
+      } else {
+        // Regular Supabase logout
+        const { error } = await supabaseHelpers.signOut();
+        if (error) {
+          console.error('Logout error:', error);
+        }
       }
 
       // Clear local state
