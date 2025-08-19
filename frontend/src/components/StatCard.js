@@ -49,12 +49,12 @@ function StatCard({
       transition={{ type: 'spring', stiffness: 300, damping: 20 }}
     >
       <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <p className="stat-label">{title}</p>
-          <div className="flex items-baseline space-x-2">
-            <p className="stat-value">{value}</p>
+        <div className="flex-1 min-w-0">
+          <p className="stat-label truncate">{title}</p>
+          <div className="flex items-baseline space-x-1 sm:space-x-2">
+            <p className="stat-value text-xl sm:text-2xl lg:text-3xl truncate">{value}</p>
             {trendValue && (
-              <span className={`text-sm font-medium ${
+              <span className={`text-xs sm:text-sm font-medium ${
                 trend === 'up' ? 'text-success-600 dark:text-success-400' : 
                 trend === 'down' ? 'text-danger-600 dark:text-danger-400' : 
                 'text-gray-500 dark:text-gray-400'
@@ -64,15 +64,15 @@ function StatCard({
             )}
           </div>
           {subtitle && (
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1 truncate">
               {subtitle}
             </p>
           )}
         </div>
         
-        <div className="flex flex-col items-end space-y-2">
-          <div className={`p-3 rounded-lg ${colors.bg} ${colors.border} border`}>
-            <Icon className={`h-6 w-6 ${colors.icon}`} />
+        <div className="flex flex-col items-end space-y-1 sm:space-y-2 flex-shrink-0 ml-2 sm:ml-4">
+          <div className={`p-2 sm:p-3 rounded-lg ${colors.bg} ${colors.border} border`}>
+            <Icon className={`h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 ${colors.icon}`} />
           </div>
           
           {trend && (
@@ -82,9 +82,9 @@ function StatCard({
               'text-gray-500 dark:text-gray-400'
             }`}>
               {trend === 'up' ? (
-                <ArrowUpIcon className="h-4 w-4" />
+                <ArrowUpIcon className="h-3 w-3 sm:h-4 sm:w-4" />
               ) : trend === 'down' ? (
-                <ArrowDownIcon className="h-4 w-4" />
+                <ArrowDownIcon className="h-3 w-3 sm:h-4 sm:w-4" />
               ) : null}
               <span className="text-xs font-medium">
                 {trend === 'up' ? 'Good' : trend === 'down' ? 'Alert' : 'Stable'}

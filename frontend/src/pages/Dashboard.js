@@ -108,25 +108,25 @@ function Dashboard() {
 
   return (
     <motion.div
-      className="space-y-6"
+      className="space-y-4 sm:space-y-6"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
       {/* Header */}
-      <motion.div variants={itemVariants} className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Dashboard
+      <motion.div variants={itemVariants} className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white truncate">
+            Smart City Dashboard
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Real-time city monitoring and analytics
+          <p className="mt-1 text-sm sm:text-base text-gray-600 dark:text-gray-400">
+            Real-time monitoring and analytics
           </p>
         </div>
         
-        <div className="flex items-center space-x-4">
+        <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-4">
           {/* Connection status */}
-          <div className={`flex items-center space-x-2 px-3 py-1 rounded-full text-sm ${
+          <div className={`flex items-center space-x-2 px-3 py-2 rounded-full text-xs sm:text-sm whitespace-nowrap ${
             isConnected 
               ? 'bg-success-100 text-success-800 dark:bg-success-900 dark:text-success-200'
               : 'bg-danger-100 text-danger-800 dark:bg-danger-900 dark:text-danger-200'
@@ -139,7 +139,7 @@ function Dashboard() {
           <select
             value={selectedTimeRange}
             onChange={(e) => setSelectedTimeRange(e.target.value)}
-            className="input text-sm"
+            className="input text-xs sm:text-sm min-w-0 flex-shrink-0"
           >
             <option value="1h">Last Hour</option>
             <option value="24h">Last 24 Hours</option>
@@ -150,7 +150,7 @@ function Dashboard() {
       </motion.div>
 
       {/* Statistics Cards */}
-      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <StatCard
           title="Total Sensors"
           value={stats.totalSensors}
@@ -189,7 +189,7 @@ function Dashboard() {
       </motion.div>
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Sensor Map */}
         <motion.div variants={itemVariants} className="lg:col-span-2">
           <div className="card">
@@ -197,17 +197,19 @@ function Dashboard() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <MapPinIcon className="w-5 h-5 text-gray-400" />
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                  <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white">
                     Sensor Locations
                   </h3>
                 </div>
-                <span className="text-sm text-gray-500 dark:text-gray-400">
+                <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                   {sensors.length} sensors
                 </span>
               </div>
             </div>
             <div className="card-body p-0">
-              <SensorMap sensors={sensors} realtimeData={realtimeData.sensors} />
+              <div className="h-64 sm:h-80 lg:h-96">
+                <SensorMap sensors={sensors} realtimeData={realtimeData.sensors} />
+              </div>
             </div>
           </div>
         </motion.div>
@@ -219,24 +221,26 @@ function Dashboard() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <ExclamationTriangleIcon className="w-5 h-5 text-gray-400" />
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                  <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white">
                     Active Alerts
                   </h3>
                 </div>
-                <span className="badge badge-warning">
+                <span className="badge badge-warning text-xs">
                   {activeAlerts.length}
                 </span>
               </div>
             </div>
             <div className="card-body p-0">
-              <AlertsList alerts={activeAlerts.slice(0, 10)} compact />
+              <div className="max-h-64 sm:max-h-80 lg:max-h-96 overflow-y-auto">
+                <AlertsList alerts={activeAlerts.slice(0, 10)} compact />
+              </div>
             </div>
           </div>
         </motion.div>
       </div>
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Real-time Data Chart */}
         <motion.div variants={itemVariants}>
           <div className="card">
@@ -244,18 +248,20 @@ function Dashboard() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <ChartBarIcon className="w-5 h-5 text-gray-400" />
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                  <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white">
                     Real-time Metrics
                   </h3>
                 </div>
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-success-500 rounded-full animate-pulse" />
-                  <span className="text-sm text-gray-500 dark:text-gray-400">Live</span>
+                  <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Live</span>
                 </div>
               </div>
             </div>
             <div className="card-body">
-              <RealtimeChart data={realtimeData.sensors} />
+              <div className="h-64 sm:h-80">
+                <RealtimeChart data={realtimeData.sensors} />
+              </div>
             </div>
           </div>
         </motion.div>
@@ -264,12 +270,12 @@ function Dashboard() {
         <motion.div variants={itemVariants}>
           <div className="card">
             <div className="card-header">
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+              <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white">
                 Sensor Distribution
               </h3>
             </div>
             <div className="card-body">
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {Object.entries(sensorTypes).map(([type, count]) => {
                   const percentage = (count / stats.totalSensors) * 100;
                   const colors = {
@@ -284,17 +290,17 @@ function Dashboard() {
                   
                   return (
                     <div key={type} className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className={`w-3 h-3 rounded-full ${colors[type] || 'bg-gray-500'}`} />
-                        <span className="text-sm font-medium text-gray-900 dark:text-white capitalize">
+                      <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
+                        <div className={`w-3 h-3 rounded-full flex-shrink-0 ${colors[type] || 'bg-gray-500'}`} />
+                        <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white capitalize truncate">
                           {type.replace('_', ' ')}
                         </span>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                      <div className="flex items-center space-x-2 flex-shrink-0">
+                        <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                           {count}
                         </span>
-                        <div className="w-16 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                        <div className="w-12 sm:w-16 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                           <motion.div
                             className={`h-2 rounded-full ${colors[type] || 'bg-gray-500'}`}
                             initial={{ width: 0 }}
@@ -318,21 +324,21 @@ function Dashboard() {
           <div className="card-header">
             <div className="flex items-center space-x-2">
               <ClockIcon className="w-5 h-5 text-gray-400" />
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+              <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white">
                 Recent Activity
               </h3>
             </div>
           </div>
           <div className="card-body">
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {Object.entries(realtimeData.sensors)
                 .slice(0, 5)
                 .map(([sensorId, data]) => (
                   <div key={sensorId} className="flex items-center justify-between py-2 border-b border-gray-200 dark:border-gray-700 last:border-b-0">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-2 h-2 bg-success-500 rounded-full" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-900 dark:text-white">
+                    <div className="flex items-center space-x-3 min-w-0 flex-1">
+                      <div className="w-2 h-2 bg-success-500 rounded-full flex-shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white truncate">
                           {sensorId}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -340,17 +346,17 @@ function Dashboard() {
                         </p>
                       </div>
                     </div>
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-gray-400 flex-shrink-0 ml-2">
                       {data.timestamp ? new Date(data.timestamp).toLocaleTimeString() : 'Now'}
                     </span>
                   </div>
                 ))}
               
               {Object.keys(realtimeData.sensors).length === 0 && (
-                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                  <CpuChipIcon className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>No recent sensor activity</p>
-                  <p className="text-sm">Start the IoT simulation to see real-time data</p>
+                <div className="text-center py-6 sm:py-8 text-gray-500 dark:text-gray-400">
+                  <CpuChipIcon className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 sm:mb-4 opacity-50" />
+                  <p className="text-sm sm:text-base">No recent sensor activity</p>
+                  <p className="text-xs sm:text-sm mt-1">Start the IoT simulation to see real-time data</p>
                 </div>
               )}
             </div>

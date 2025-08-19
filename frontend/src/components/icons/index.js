@@ -58,7 +58,8 @@ import {
   BarChart,
   LineChart,
   PieChart,
-  TrendingDown
+  TrendingDown,
+  Link
 } from 'lucide-react';
 
 // Icon mapping for consistent usage across the app
@@ -68,6 +69,7 @@ export const Icons = {
   analytics: TrendingUp,
   sensors: Cpu,
   alerts: AlertTriangle,
+  blockchain: Link,
   services: Building2,
   settings: Settings,
   profile: User,

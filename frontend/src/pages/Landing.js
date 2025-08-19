@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { CpuChipIcon, GlobeAltIcon, BoltIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
@@ -29,6 +29,55 @@ function IndianGradientBG() {
 
 export default function Landing() {
   const { city, cityKey, setCity, cities } = useCity();
+  const [imageError, setImageError] = useState(false);
+  const [useDefault, setUseDefault] = useState(false);
+
+  // Get city image path
+  const getCityImagePath = () => {
+    if (useDefault) return '/cities/default.svg';
+    const cityName = cityKey.toLowerCase().replace(/\s+/g, '');
+    return `/cities/${cityName}.svg`;
+  };
+
+  // Handle image loading errors
+  const handleImageError = () => {
+    if (!useDefault) {
+      setUseDefault(true);
+      setImageError(false);
+    } else {
+      setImageError(true);
+    }
+  };
+
+  // Reset when city changes
+  useEffect(() => {
+    setUseDefault(false);
+    setImageError(false);
+  }, [cityKey]);
+
+  // Fallback SVG if all images fail
+  const getFallbackImage = () => {
+    return `data:image/svg+xml,${encodeURIComponent(`
+      <svg width="1200" height="800" viewBox="0 0 1200 800" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="fallbackGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:${city.theme.gradientFrom};stop-opacity:1" />
+            <stop offset="50%" style="stop-color:${city.theme.gradientVia};stop-opacity:1" />
+            <stop offset="100%" style="stop-color:${city.theme.gradientTo};stop-opacity:1" />
+          </linearGradient>
+        </defs>
+        <rect width="1200" height="800" fill="url(#fallbackGradient)"/>
+        <text x="600" y="400" text-anchor="middle" fill="rgba(255,255,255,0.9)" font-family="Arial, sans-serif" font-size="48" font-weight="bold">${cityKey}</text>
+        <text x="600" y="450" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-family="Arial, sans-serif" font-size="24">Smart City</text>
+        <circle cx="600" cy="200" r="50" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2">
+          <animate attributeName="r" values="50;60;50" dur="2s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="600" cy="200" r="30" fill="rgba(255,255,255,0.3)">
+          <animate attributeName="opacity" values="0.3;0.8;0.3" dur="2s" repeatCount="indefinite"/>
+        </circle>
+      </svg>
+    `)}`
+  };
 
   return (
     <div className="min-h-screen relative overflow-hidden text-white">
@@ -145,21 +194,33 @@ export default function Landing() {
             >
               <div className="relative rounded-3xl overflow-hidden border border-white/20 bg-white/10 backdrop-blur-xl shadow-2xl">
                 <div className="aspect-[16/10]">
-                  <img
-                    src={`https://source.unsplash.com/1200x800/?city,${city.key}`}
-                    alt="City"
-                    className="w-full h-full object-cover opacity-90"
-                  />
+                  {!imageError ? (
+                    <img
+                      src={getCityImagePath()}
+                      alt={`${cityKey} Smart City`}
+                      className="w-full h-full object-cover opacity-90 transition-opacity duration-300"
+                      onError={handleImageError}
+                    />
+                  ) : (
+                    <img
+                      src={getFallbackImage()}
+                      alt={`${cityKey} Smart City Fallback`}
+                      className="w-full h-full object-cover opacity-90"
+                    />
+                  )}
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-tr from-black/40 via-transparent to-white/10" />
 
                 {/* Floating stats */}
                 <div className="absolute top-4 left-4 space-y-3">
                   <div className="px-4 py-2 rounded-xl bg-black/40 border border-white/10 backdrop-blur text-sm">
-                    Live Sensors: 122
+                    <span className="text-green-300">●</span> Live Sensors: 122
                   </div>
                   <div className="px-4 py-2 rounded-xl bg-black/40 border border-white/10 backdrop-blur text-sm">
-                    Active Alerts: 8
+                    <span className="text-orange-300">●</span> Active Alerts: 8
+                  </div>
+                  <div className="px-4 py-2 rounded-xl bg-black/40 border border-white/10 backdrop-blur text-sm">
+                    <span className="text-blue-300">●</span> City: {cityKey}
                   </div>
                 </div>
 

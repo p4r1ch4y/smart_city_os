@@ -116,11 +116,11 @@
   }
   
   .stat-card {
-    @apply card p-6 hover:shadow-lg transition-shadow duration-200;
+    @apply card p-4 sm:p-6 hover:shadow-lg transition-shadow duration-200;
   }
   
   .stat-value {
-    @apply text-3xl font-bold text-gray-900;
+    @apply text-2xl sm:text-3xl font-bold text-gray-900;
   }
   
   .dark .stat-value {
@@ -128,7 +128,7 @@
   }
   
   .stat-label {
-    @apply text-sm font-medium text-gray-500 uppercase tracking-wide;
+    @apply text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wide;
   }
   
   .dark .stat-label {
