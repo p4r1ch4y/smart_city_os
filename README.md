@@ -1,16 +1,19 @@
+
 # Smart City OS - Complete Urban Management Platform
 
 A comprehensive, production-ready smart city management platform featuring AI-powered analytics, blockchain transparency, and real-time IoT monitoring.
 
+## ⚡️ Economic Model Update
+
+**Sensor Data Aggregation:**
+To ensure economic viability, individual sensor readings are now aggregated off-chain at regular intervals (e.g., hourly/daily). Only compiled summaries and essential contract metadata are pushed to the blockchain, dramatically reducing transaction costs and network congestion.
+
+**Blockchain Usage:**
+Solana is used for transparent logging of contract state and periodic, aggregated sensor summaries. Raw sensor data is stored and analyzed off-chain for analytics and dashboard visualization.
+
 ## 🌟 Features
 
 ### Core Platform
-- **Real-time IoT Sensor Monitoring** - 34+ sensors across traffic, energy, air quality, water, and waste management
-- **Interactive Dashboard** - Professional UI with live data visualization and predictive insights
-- **Alert Management System** - Intelligent notification system with severity-based filtering
-- **User Authentication** - JWT + Stack Auth integration with role-based access control
-- **Responsive Design** - Mobile-first design with dark/light mode support
-- **WebSocket Real-time Updates** - Live data streaming and instant notifications
 
 ### Advanced Features
 - **Predictive Analytics** - LSTM/ARIMA models for traffic, energy, and environmental forecasting

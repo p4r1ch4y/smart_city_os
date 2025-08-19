@@ -1,6 +1,10 @@
 <img src="https://r2cdn.perplexity.ai/pplx-full-logo-primary-dark%402x.png" style="height:64px;margin-right:32px"/>
 
+
 ## Part 1: Strategic Analysis of the Project Requirements
+
+**Economic Model Update:**
+To ensure the platform is economically viable, sensor data is now aggregated off-chain and only compiled summaries are pushed to the blockchain at regular intervals. This minimizes transaction costs and network congestion. Blockchain is used for contract metadata and periodic summaries, while raw sensor data is stored and analyzed off-chain for analytics and dashboard visualization.
 
 The Smart City Management Platform, as detailed in the project description, represents a sophisticated opportunity to build an integrated system that aligns perfectly with your background in software engineering, AI, web3, and electrical engineering. Below, I break it down strategically, highlighting how it positions you to demonstrate systems thinking, innovation, and real-world problem-solving.[^1_1]
 

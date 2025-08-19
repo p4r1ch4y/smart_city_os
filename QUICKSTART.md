@@ -1,6 +1,12 @@
+
 # Smart City OS - Quick Start Guide
 
 This guide will help you get the Smart City OS up and running quickly.
+
+## ⚡️ Economic Model Update
+
+**Sensor Data Aggregation:**
+Sensor readings are now aggregated off-chain and only compiled summaries are pushed to the blockchain at intervals. This reduces transaction costs and improves scalability. Raw sensor data is used for analytics and dashboard visualization, while the blockchain stores contract metadata and periodic summaries.
 
 ## Prerequisites
 
