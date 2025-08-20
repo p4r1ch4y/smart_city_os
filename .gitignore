@@ -297,3 +297,10 @@ confirm-admin-user.js
 deploy-production.sh
 PROJECT_DESCRIPTION.md
 
+# Anchor/Solana build artifacts
+anchor_project/test-ledger/
+anchor_project/trident-tests/
+test-ledger/
+target/
+.anchor/
+

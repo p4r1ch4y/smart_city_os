@@ -3,10 +3,10 @@ seeds = false
 skip-lint = false
 
 [programs.localnet]
-civic_ledger = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+civic_ledger = "7jGiTQRkU66HczW2rSBDYbvnvMPxtsVYR72vpa9a7qF2"
 
 [programs.devnet]
-civic_ledger = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+civic_ledger = "7jGiTQRkU66HczW2rSBDYbvnvMPxtsVYR72vpa9a7qF2"
 
 [registry]
 url = "https://api.apr.dev"
@@ -17,3 +17,6 @@ wallet = "~/.config/solana/id.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+
+[test]
+startup_wait = 10000000

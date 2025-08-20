@@ -1,12 +1,6 @@
 use anchor_lang::prelude::*;
-mod air_quality;
-mod contract;
 
-pub use air_quality::*;
-pub use contract::*;
-// Module imports and declarations
-
-declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
+declare_id!("7jGiTQRkU66HczW2rSBDYbvnvMPxtsVYR72vpa9a7qF2");
 
 #[program]
 pub mod civic_ledger {
@@ -37,13 +31,11 @@ pub mod civic_ledger {
         aqi: u16,
         pm25: f32,
         pm10: f32,
-    //
-
         co2: f32,
         humidity: f32,
         temperature: f32,
     ) -> Result<()> {
-    // Validate input ranges for sensor data
+        // Validate input ranges for sensor data
         require!(aqi <= 500, CustomError::InvalidAQIValue);
         require!(pm25 >= 0.0 && pm25 <= 1000.0, CustomError::InvalidPM25Value);
         require!(pm10 >= 0.0 && pm10 <= 1000.0, CustomError::InvalidPM10Value);
@@ -255,4 +247,40 @@ pub enum CustomError {
     DescriptionTooLong,
     #[msg("Contract type too long (max 30 characters)")]
     ContractTypeTooLong,
+}
+
+#[event]
+pub struct AirQualityInitialized {
+    pub air_quality: Pubkey,
+    pub location: String,
+    pub sensor_id: String,
+    pub authority: Pubkey,
+}
+
+#[event]
+pub struct AirQualityUpdated {
+    pub air_quality: Pubkey,
+    pub aqi: u16,
+    pub pm25: f32,
+    pub pm10: f32,
+    pub co2: f32,
+    pub humidity: f32,
+    pub temperature: f32,
+    pub timestamp: i64,
+}
+
+#[event]
+pub struct ContractInitialized {
+    pub contract: Pubkey,
+    pub name: String,
+    pub description: String,
+    pub contract_type: String,
+    pub authority: Pubkey,
+}
+
+#[event]
+pub struct ContractStatusUpdated {
+    pub contract: Pubkey,
+    pub is_active: bool,
+    pub timestamp: i64,
 }
