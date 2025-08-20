@@ -15,9 +15,30 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_absolute_error, mean_squared_error
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import LinearRegression
 import joblib
 import warnings
 warnings.filterwarnings('ignore')
+
+# Try to import advanced ML libraries
+try:
+    from statsmodels.tsa.arima.model import ARIMA
+    from statsmodels.tsa.seasonal import seasonal_decompose
+    ARIMA_AVAILABLE = True
+except ImportError:
+    ARIMA_AVAILABLE = False
+    logger.warning("ARIMA models not available. Install statsmodels for advanced time series analysis.")
+
+try:
+    import tensorflow as tf
+    from tensorflow.keras.models import Sequential
+    from tensorflow.keras.layers import LSTM, Dense, Dropout
+    from tensorflow.keras.optimizers import Adam
+    TENSORFLOW_AVAILABLE = True
+except ImportError:
+    TENSORFLOW_AVAILABLE = False
+    logger.warning("TensorFlow not available. Using simplified models.")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

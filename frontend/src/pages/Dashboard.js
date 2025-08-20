@@ -9,14 +9,25 @@ import {
   ChartBarIcon,
   SignalIcon,
   MapPinIcon,
-  ClockIcon
+  ClockIcon,
+  WifiIcon,
+  BellIcon
 } from '@heroicons/react/24/outline';
-import StatCard from '../components/StatCard';
+import {
+  DashboardContainer,
+  StatsGrid,
+  MainContentGrid,
+  MetricCard,
+  DashboardCard,
+  ChartContainer,
+  AlertBanner
+} from '../components/DashboardGrid';
 import SensorMap from '../components/SensorMap';
 import RealtimeChart from '../components/RealtimeChart';
 import AlertsList from '../components/AlertsList';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { useCity } from '../contexts/CityContext';
+import { useAuth } from '../contexts/AuthContext';
 import { generateCitySensors, generateRealtimePattern } from '../utils/dummyCityData';
 
 function Dashboard() {
@@ -107,14 +118,9 @@ function Dashboard() {
   }
 
   return (
-    <motion.div
-      className="space-y-4 sm:space-y-6"
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-    >
+    <DashboardContainer className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <motion.div variants={itemVariants} className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
+      <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
         <div className="min-w-0 flex-1">
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white truncate">
             Smart City Dashboard
@@ -147,75 +153,70 @@ function Dashboard() {
             <option value="30d">Last 30 Days</option>
           </select>
         </div>
-      </motion.div>
+      </div>
 
       {/* Statistics Cards */}
-      <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        <StatCard
+      <StatsGrid>
+        <MetricCard
           title="Total Sensors"
           value={stats.totalSensors}
           icon={CpuChipIcon}
-          color="primary"
-          subtitle={`${stats.activeSensors} active`}
+          color="blue"
           trend={stats.activeSensors > stats.offlineSensors ? 'up' : 'down'}
+          trendValue={`${stats.activeSensors} active`}
         />
-        
-        <StatCard
+
+        <MetricCard
           title="Active Alerts"
           value={stats.totalAlerts}
           icon={ExclamationTriangleIcon}
-          color="warning"
-          subtitle={`${stats.criticalAlerts} critical`}
+          color={stats.criticalAlerts > 0 ? "red" : "green"}
           trend={stats.criticalAlerts > 0 ? 'down' : 'up'}
+          trendValue={`${stats.criticalAlerts} critical`}
         />
-        
-        <StatCard
+
+        <MetricCard
           title="System Health"
           value={`${Math.round((stats.activeSensors / stats.totalSensors) * 100)}%`}
           icon={SignalIcon}
-          color="success"
-          subtitle="Operational"
+          color="green"
           trend="up"
+          trendValue="Operational"
         />
-        
-        <StatCard
+
+        <MetricCard
           title="Data Points"
           value={Object.keys(realtimeData.sensors).length}
           icon={ChartBarIcon}
-          color="info"
-          subtitle="Real-time"
+          color="purple"
           trend="up"
+          trendValue="Real-time"
         />
-      </motion.div>
+      </StatsGrid>
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+      <MainContentGrid>
         {/* Sensor Map */}
-        <motion.div variants={itemVariants} className="lg:col-span-2">
-          <div className="card">
-            <div className="card-header">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <MapPinIcon className="w-5 h-5 text-gray-400" />
-                  <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white">
-                    Sensor Locations
-                  </h3>
-                </div>
-                <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                  {sensors.length} sensors
+        <div className="lg:col-span-2">
+          <ChartContainer
+            title="Sensor Locations"
+            subtitle={`${sensors.length} sensors monitoring city infrastructure`}
+            height="h-96"
+            headerAction={
+              <div className="flex items-center space-x-2">
+                <WifiIcon className="w-4 h-4 text-green-500" />
+                <span className="text-sm text-gray-500 dark:text-gray-400">
+                  {stats.activeSensors} online
                 </span>
               </div>
-            </div>
-            <div className="card-body p-0">
-              <div className="h-64 sm:h-80 lg:h-96">
-                <SensorMap sensors={sensors} realtimeData={realtimeData.sensors} />
-              </div>
-            </div>
-          </div>
-        </motion.div>
+            }
+          >
+            <SensorMap sensors={sensors} realtimeData={realtimeData.sensors} />
+          </ChartContainer>
+        </div>
 
         {/* Active Alerts */}
-        <motion.div variants={itemVariants}>
+        <div>
           <div className="card h-full">
             <div className="card-header">
               <div className="flex items-center justify-between">
@@ -236,13 +237,13 @@ function Dashboard() {
               </div>
             </div>
           </div>
-        </motion.div>
-      </div>
+        </div>
+      </MainContentGrid>
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Real-time Data Chart */}
-        <motion.div variants={itemVariants}>
+        <div>
           <div className="card">
             <div className="card-header">
               <div className="flex items-center justify-between">
@@ -264,10 +265,10 @@ function Dashboard() {
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Sensor Types Distribution */}
-        <motion.div variants={itemVariants}>
+        <div>
           <div className="card">
             <div className="card-header">
               <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white">
@@ -315,11 +316,11 @@ function Dashboard() {
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
 
       {/* Recent Activity */}
-      <motion.div variants={itemVariants}>
+      <div>
         <div className="card">
           <div className="card-header">
             <div className="flex items-center space-x-2">
@@ -362,8 +363,8 @@ function Dashboard() {
             </div>
           </div>
         </div>
-      </motion.div>
-    </motion.div>
+      </div>
+    </DashboardContainer>
   );
 }
 

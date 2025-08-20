@@ -60,6 +60,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/sensors', authMiddleware, sensorRoutes);
 app.use('/api/alerts', authMiddleware, alertRoutes);
 app.use('/api/blockchain', require('./routes/blockchain'));
+app.use('/api/advanced-analytics', authMiddleware, require('./routes/advancedAnalytics'));
 
 // WebSocket connection handling
 io.on('connection', (socket) => {

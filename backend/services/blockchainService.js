@@ -75,12 +75,16 @@ class BlockchainService {
   }
 
   /**
-   * Log sensor data to blockchain for transparency
+   * Cost-effective blockchain logging strategy
+   * Only logs critical data to reduce transaction costs
    */
   async logSensorData(sensorData) {
     try {
       const { id, type, value, timestamp, location, metadata } = sensorData;
-      
+
+      // Determine if this data should be posted on-chain
+      const shouldPostOnChain = this.shouldPostToBlockchain(sensorData);
+
       // Extract air quality data if available
       let airQualityData = null;
       if (type === 'air_quality' && metadata) {
@@ -101,20 +105,23 @@ class BlockchainService {
         timestamp,
         location: location || 'Unknown',
         airQualityData,
-        hash: this.generateDataHash(sensorData)
+        hash: this.generateDataHash(sensorData),
+        priority: shouldPostOnChain ? 'high' : 'low'
       };
 
-      if (this.isInitialized && airQualityData) {
-        // Try to update air quality on-chain
+      if (shouldPostOnChain && this.isInitialized && airQualityData) {
+        // Post critical/exceptional data to blockchain
         const result = await this.updateAirQuality(location || 'Unknown', id, airQualityData);
-        
+
         if (result.success) {
-          console.log(`Air quality data logged to blockchain: ${id}`);
+          console.log(`🔗 Critical air quality data logged to blockchain: ${id} (AQI: ${airQualityData.aqi})`);
           return {
             success: true,
             pda: result.pda,
             message: result.message,
-            blockchainNetwork: 'solana-devnet'
+            blockchainNetwork: 'solana-devnet',
+            costOptimized: true,
+            reason: this.getBlockchainPostingReason(sensorData)
           };
         } else {
           // Queue for retry if blockchain is temporarily unavailable
@@ -122,12 +129,14 @@ class BlockchainService {
           return result;
         }
       } else {
-        // Queue transaction if not initialized or not air quality data
-        this.queueTransaction('sensor', logData);
+        // Store locally for normal readings - cost optimization
+        console.log(`💾 Normal sensor data stored locally: ${id} (${type}: ${value})`);
         return {
           success: true,
-          queued: true,
-          message: 'Transaction queued for blockchain logging'
+          queued: false,
+          localOnly: true,
+          message: 'Normal reading stored locally (cost optimization)',
+          reason: shouldPostOnChain ? 'Blockchain not initialized' : 'Normal reading - no blockchain needed'
         };
       }
     } catch (error) {
@@ -137,6 +146,79 @@ class BlockchainService {
         error: error.message
       };
     }
+  }
+
+  /**
+   * Determine if sensor data should be posted to blockchain
+   * Cost optimization: Only post critical/exceptional data
+   */
+  shouldPostToBlockchain(sensorData) {
+    const { type, value, metadata } = sensorData;
+
+    switch (type) {
+      case 'air_quality':
+        if (metadata?.aqi) {
+          // Post if AQI is critical (>150) or exceptionally good (<25)
+          return metadata.aqi > 150 || metadata.aqi < 25;
+        }
+        return false;
+
+      case 'traffic':
+        // Post if traffic congestion is critical (>90%) or exceptionally low (<10%)
+        return value > 90 || value < 10;
+
+      case 'energy':
+        // Post if energy consumption is critical (>95%) or exceptionally efficient (<20%)
+        return value > 95 || value < 20;
+
+      case 'water':
+        // Post if water levels are critical (>95% or <10%)
+        return value > 95 || value < 10;
+
+      case 'waste':
+        // Post if waste bins are full (>90%) or empty (<5%)
+        return value > 90 || value < 5;
+
+      default:
+        // For unknown types, only post extreme values
+        return value > 90 || value < 10;
+    }
+  }
+
+  /**
+   * Get human-readable reason for blockchain posting
+   */
+  getBlockchainPostingReason(sensorData) {
+    const { type, value, metadata } = sensorData;
+
+    switch (type) {
+      case 'air_quality':
+        if (metadata?.aqi > 150) return 'Critical air quality alert - public health concern';
+        if (metadata?.aqi < 25) return 'Exceptional air quality - environmental achievement';
+        break;
+
+      case 'traffic':
+        if (value > 90) return 'Severe traffic congestion - emergency response needed';
+        if (value < 10) return 'Exceptional traffic flow - infrastructure efficiency';
+        break;
+
+      case 'energy':
+        if (value > 95) return 'Critical energy consumption - grid stability concern';
+        if (value < 20) return 'Exceptional energy efficiency - sustainability milestone';
+        break;
+
+      case 'water':
+        if (value > 95) return 'Critical water level - flood risk';
+        if (value < 10) return 'Low water level - drought concern';
+        break;
+
+      case 'waste':
+        if (value > 90) return 'Waste bins full - immediate collection needed';
+        if (value < 5) return 'Efficient waste management - optimization success';
+        break;
+    }
+
+    return 'Exceptional reading requiring transparency';
   }
 
   async initializeAirQuality(location, sensorId) {
@@ -212,6 +294,68 @@ class BlockchainService {
       return {
         success: false,
         error: error.message
+      };
+    }
+  }
+
+  /**
+   * Log administrative contract to blockchain (ALWAYS posted for transparency)
+   * Administrative contracts and governance decisions are always blockchain-logged
+   */
+  async logAdministrativeContract(contractData) {
+    try {
+      const { name, description, type, authority } = contractData;
+
+      console.log(`🏛️ Administrative contract ALWAYS posted to blockchain: ${name}`);
+
+      if (this.isInitialized) {
+        // Try to initialize contract on-chain
+        const result = await this.initializeContract(name, description, type);
+
+        if (result.success) {
+          console.log(`✅ Administrative contract logged to blockchain: ${name}`);
+          return {
+            success: true,
+            pda: result.pda,
+            message: result.message,
+            blockchainNetwork: 'solana-devnet',
+            contractType: 'administrative',
+            transparency: 'full',
+            reason: 'Administrative transparency requirement'
+          };
+        } else {
+          // Queue for retry - administrative contracts must be on-chain
+          this.queueTransaction('contract', {
+            name,
+            description,
+            type,
+            authority,
+            priority: 'critical'
+          });
+          return result;
+        }
+      } else {
+        // Queue with high priority - administrative contracts are critical
+        this.queueTransaction('contract', {
+          name,
+          description,
+          type,
+          authority,
+          priority: 'critical'
+        });
+        return {
+          success: true,
+          queued: true,
+          priority: 'critical',
+          message: 'Administrative contract queued for blockchain logging (high priority)'
+        };
+      }
+    } catch (error) {
+      console.error('Administrative contract logging error:', error);
+      return {
+        success: false,
+        error: error.message,
+        contractType: 'administrative'
       };
     }
   }

@@ -20,6 +20,7 @@ const Services = lazy(() => import('./pages/Services'));
 const Settings = lazy(() => import('./pages/Settings'));
 const Profile = lazy(() => import('./pages/Profile'));
 const Blockchain = lazy(() => import('./pages/Blockchain'));
+const CityTwin = lazy(() => import('./pages/CityTwin'));
 
 function App() {
   return (
@@ -48,6 +49,7 @@ function App() {
                   <Route path="/analytics" element={<Analytics />} />
                   <Route path="/services" element={<Services />} />
                   <Route path="/blockchain" element={<Blockchain />} />
+                  <Route path="/city-twin" element={<CityTwin />} />
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/profile" element={<Profile />} />
                 </Route>
