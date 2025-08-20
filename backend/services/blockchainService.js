@@ -8,7 +8,7 @@ const { Connection, PublicKey, Keypair } = require('@solana/web3.js');
 class BlockchainService {
   constructor() {
     this.connection = new Connection('https://api.devnet.solana.com', 'confirmed');
-    this.programId = new PublicKey('Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS');
+    this.programId = new PublicKey('7jGiTQRkU66HczW2rSBDYbvnvMPxtsVYR72vpa9a7qF2');
     this.isInitialized = false;
     this.transactionQueue = [];
     this.processingQueue = false;
@@ -53,25 +53,50 @@ class BlockchainService {
   }
 
   derivePDAs(location, sensorId, contractName = 'IoT Service Agreement') {
-    const [airQualityPDA] = PublicKey.findProgramAddressSync(
-      [
-        Buffer.from('air_quality'),
-        Buffer.from(location),
-        Buffer.from(sensorId)
-      ],
-      this.programId
-    );
+    try {
+      // Ensure we have a valid authority public key
+      if (!this.keypair?.publicKey) {
+        throw new Error('Blockchain service not initialized - no authority keypair');
+      }
 
-    const [contractPDA] = PublicKey.findProgramAddressSync(
-      [
-        Buffer.from('contract'),
-        Buffer.from(contractName),
-        this.keypair?.publicKey?.toBuffer() || Buffer.alloc(32)
-      ],
-      this.programId
-    );
+      // Generate Air Quality PDA with proper seeds
+      const [airQualityPDA, airQualityBump] = PublicKey.findProgramAddressSync(
+        [
+          Buffer.from('air_quality'),
+          Buffer.from(location.slice(0, 32)), // Limit to 32 bytes for seed
+          Buffer.from(sensorId.slice(0, 32))   // Limit to 32 bytes for seed
+        ],
+        this.programId
+      );
 
-    return { airQualityPDA, contractPDA };
+      // Generate Contract PDA with proper seeds
+      const [contractPDA, contractBump] = PublicKey.findProgramAddressSync(
+        [
+          Buffer.from('contract'),
+          Buffer.from(contractName.slice(0, 32)), // Limit to 32 bytes for seed
+          this.keypair.publicKey.toBuffer()
+        ],
+        this.programId
+      );
+
+      console.log('🔗 PDAs derived successfully:');
+      console.log(`   Air Quality PDA: ${airQualityPDA.toString()} (bump: ${airQualityBump})`);
+      console.log(`   Contract PDA: ${contractPDA.toString()} (bump: ${contractBump})`);
+      console.log(`   Program ID: ${this.programId.toString()}`);
+      console.log(`   Authority: ${this.keypair.publicKey.toString()}`);
+
+      return { 
+        airQualityPDA, 
+        contractPDA, 
+        airQualityBump, 
+        contractBump,
+        programId: this.programId,
+        authority: this.keypair.publicKey
+      };
+    } catch (error) {
+      console.error('❌ PDA derivation failed:', error);
+      throw new Error(`PDA derivation failed: ${error.message}`);
+    }
   }
 
   /**
@@ -260,11 +285,61 @@ class BlockchainService {
     }
   }
 
+  /**
+   * Validate that a PDA is correctly derived and "not on curve"
+   * This is EXPECTED behavior for PDAs in Solana
+   */
+  validatePDA(pda, expectedSeeds, expectedBump = null) {
+    try {
+      // Verify the PDA is not on curve (this is correct for PDAs)
+      if (PublicKey.isOnCurve(pda.toBytes())) {
+        throw new Error('PDA is on curve - this should not happen for valid PDAs');
+      }
+
+      // Re-derive the PDA to verify it matches
+      const [derivedPDA, derivedBump] = PublicKey.findProgramAddressSync(
+        expectedSeeds,
+        this.programId
+      );
+
+      if (!derivedPDA.equals(pda)) {
+        throw new Error('PDA does not match expected derivation');
+      }
+
+      if (expectedBump !== null && derivedBump !== expectedBump) {
+        throw new Error(`Bump mismatch: expected ${expectedBump}, got ${derivedBump}`);
+      }
+
+      console.log('✅ PDA validation successful - correctly not on curve');
+      return { isValid: true, bump: derivedBump };
+    } catch (error) {
+      console.error('❌ PDA validation failed:', error);
+      return { isValid: false, error: error.message };
+    }
+  }
+
   async updateAirQuality(location, sensorId, sensorData) {
     await this.initialize();
 
     try {
-      const { airQualityPDA } = this.derivePDAs(location, sensorId);
+      // Derive PDAs with proper error handling
+      const pdaResult = this.derivePDAs(location, sensorId);
+      const { airQualityPDA, airQualityBump } = pdaResult;
+
+      // Validate the derived PDA
+      const validation = this.validatePDA(
+        airQualityPDA,
+        [
+          Buffer.from('air_quality'),
+          Buffer.from(location.slice(0, 32)),
+          Buffer.from(sensorId.slice(0, 32))
+        ],
+        airQualityBump
+      );
+
+      if (!validation.isValid) {
+        throw new Error(`PDA validation failed: ${validation.error}`);
+      }
 
       // Validate sensor data
       const validatedData = this.validateSensorData(sensorData);
@@ -276,24 +351,28 @@ class BlockchainService {
       }
 
       // For demo purposes, we'll just return the update information
-      console.log(`Would update air quality for ${location}:${sensorId}`);
-      console.log(`PDA: ${airQualityPDA.toString()}`);
-      console.log('Data:', sensorData);
+      console.log(`✅ Would update air quality for ${location}:${sensorId}`);
+      console.log(`🔗 PDA: ${airQualityPDA.toString()} (bump: ${airQualityBump})`);
+      console.log('📊 Data:', sensorData);
+      console.log('✅ PDA correctly not on curve (as expected)');
 
       return {
         success: true,
         pda: airQualityPDA.toString(),
+        bump: airQualityBump,
         message: 'Air quality update prepared (demo mode)',
         location,
         sensorId,
         data: sensorData,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        pdaValidation: 'passed'
       };
     } catch (error) {
-      console.error('Failed to update air quality:', error);
+      console.error('❌ Failed to update air quality:', error);
       return {
         success: false,
-        error: error.message
+        error: error.message,
+        details: 'Check PDA derivation and seed lengths'
       };
     }
   }
