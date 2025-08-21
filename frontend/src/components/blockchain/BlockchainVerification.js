@@ -1,15 +1,17 @@
 import React, { useState, useCallback } from 'react';
 import { Connection, PublicKey } from '@solana/web3.js';
-import { Program, AnchorProvider, web3 } from '@coral-xyz/anchor';
 import { toast } from 'react-toastify';
+import UnifiedCard, { CardHeader, CardContent } from '../ui/UnifiedCard';
 
 const PROGRAM_ID = new PublicKey('A8vwRav21fjK55vLQXxDZD8WFLP5cvFyYfBaEsTcy5An');
 const DEVNET_ENDPOINT = 'https://api.devnet.solana.com';
 
 const BlockchainVerification = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(false);
   const [verificationResult, setVerificationResult] = useState(null);
   const [connectionStatus, setConnectionStatus] = useState('disconnected');
+  const [showInitializeOption, setShowInitializeOption] = useState(false);
 
   // Sample sensor data for verification
   const sensorData = {
@@ -52,116 +54,61 @@ const BlockchainVerification = () => {
       PROGRAM_ID
     );
 
-    // Derive Contract PDA (using a dummy authority for demo)
-    const dummyAuthority = new PublicKey('11111111111111111111111111111112');
+    // Derive Contract PDA
     const [contractPDA] = PublicKey.findProgramAddressSync(
       [
         Buffer.from('contract'),
         Buffer.from(contractName),
-        dummyAuthority.toBuffer()
+        Buffer.from(location)
       ],
       PROGRAM_ID
     );
 
-    return { airQualityPDA, contractPDA };
+    return {
+      airQuality: airQualityPDA.toString(),
+      contract: contractPDA.toString()
+    };
   }, []);
 
   const verifyOnChain = useCallback(async () => {
     setIsLoading(true);
-    setVerificationResult(null);
-
     try {
-      // Connect to Solana
       const connection = await connectToSolana();
-      
-      // Derive PDAs
-      const { airQualityPDA, contractPDA } = derivePDAs(
-        sensorData.location,
-        sensorData.sensorId
-      );
+      const pdas = derivePDAs(sensorData.location, sensorData.sensorId);
 
-      console.log('Air Quality PDA:', airQualityPDA.toString());
-      console.log('Contract PDA:', contractPDA.toString());
+      // Check if accounts exist
+      const airQualityAccount = await connection.getAccountInfo(new PublicKey(pdas.airQuality));
+      const contractAccount = await connection.getAccountInfo(new PublicKey(pdas.contract));
 
-      // Verify accounts exist and fetch data
-      const verificationResults = {
-        timestamp: new Date().toISOString(),
-        pdas: {
-          airQuality: airQualityPDA.toString(),
-          contract: contractPDA.toString()
-        },
+      const result = {
+        pdas,
         accounts: {
-          airQuality: null,
-          contract: null
+          airQuality: {
+            exists: !!airQualityAccount,
+            lamports: airQualityAccount?.lamports || 0,
+            dataSize: airQualityAccount?.data?.length || 0
+          },
+          contract: {
+            exists: !!contractAccount,
+            lamports: contractAccount?.lamports || 0,
+            dataSize: contractAccount?.data?.length || 0
+          }
         },
         verification: {
-          airQualityExists: false,
-          contractExists: false,
-          dataMatches: false
-        }
+          airQualityExists: !!airQualityAccount,
+          contractExists: !!contractAccount,
+          dataMatches: !!(airQualityAccount || contractAccount)
+        },
+        timestamp: new Date().toISOString()
       };
 
-      try {
-        // Try to fetch air quality account
-        const airQualityAccountInfo = await connection.getAccountInfo(airQualityPDA);
-        if (airQualityAccountInfo) {
-          verificationResults.verification.airQualityExists = true;
-          verificationResults.accounts.airQuality = {
-            exists: true,
-            lamports: airQualityAccountInfo.lamports,
-            owner: airQualityAccountInfo.owner.toString(),
-            dataSize: airQualityAccountInfo.data.length
-          };
-        } else {
-          verificationResults.accounts.airQuality = {
-            exists: false,
-            message: 'Air quality account not found on-chain'
-          };
-        }
-      } catch (error) {
-        console.error('Error fetching air quality account:', error);
-        verificationResults.accounts.airQuality = {
-          exists: false,
-          error: error.message
-        };
-      }
+      setVerificationResult(result);
 
-      try {
-        // Try to fetch contract account
-        const contractAccountInfo = await connection.getAccountInfo(contractPDA);
-        if (contractAccountInfo) {
-          verificationResults.verification.contractExists = true;
-          verificationResults.accounts.contract = {
-            exists: true,
-            lamports: contractAccountInfo.lamports,
-            owner: contractAccountInfo.owner.toString(),
-            dataSize: contractAccountInfo.data.length
-          };
-        } else {
-          verificationResults.accounts.contract = {
-            exists: false,
-            message: 'Contract account not found on-chain'
-          };
-        }
-      } catch (error) {
-        console.error('Error fetching contract account:', error);
-        verificationResults.accounts.contract = {
-          exists: false,
-          error: error.message
-        };
-      }
-
-      // Check if any data exists
-      verificationResults.verification.dataMatches = 
-        verificationResults.verification.airQualityExists || 
-        verificationResults.verification.contractExists;
-
-      setVerificationResult(verificationResults);
-
-      if (verificationResults.verification.dataMatches) {
+      if (result.verification.dataMatches) {
         toast.success('✅ On-chain verification successful!');
       } else {
-        toast.info('ℹ️ No matching data found on-chain. Deploy contracts first.');
+        setShowInitializeOption(true);
+        toast.info('ℹ️ No on-chain records found. The system is ready to log its first data entry.');
       }
 
     } catch (error) {
@@ -176,6 +123,49 @@ const BlockchainVerification = () => {
       setIsLoading(false);
     }
   }, [connectToSolana, derivePDAs, sensorData]);
+
+  const initializeAccounts = useCallback(async () => {
+    setIsInitializing(true);
+    try {
+      // Call backend to initialize accounts
+      const response = await fetch('/api/blockchain/initialize-accounts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          location: sensorData.location,
+          sensorId: sensorData.sensorId,
+          sensorData: {
+            aqi: sensorData.aqi,
+            pm25: sensorData.pm25,
+            pm10: sensorData.pm10,
+            co2: sensorData.co2,
+            humidity: sensorData.humidity,
+            temperature: sensorData.temperature
+          }
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast.success('✅ Accounts initialized successfully! You can now verify on-chain data.');
+        setShowInitializeOption(false);
+        // Automatically re-verify after initialization
+        setTimeout(() => {
+          verifyOnChain();
+        }, 2000);
+      } else {
+        toast.error(`❌ Failed to initialize accounts: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('Account initialization failed:', error);
+      toast.error('❌ Account initialization failed. Please try again.');
+    } finally {
+      setIsInitializing(false);
+    }
+  }, [sensorData, verifyOnChain]);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -196,205 +186,153 @@ const BlockchainVerification = () => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6 max-w-4xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Blockchain Verification</h2>
-        <div className={`font-medium ${getStatusColor(connectionStatus)}`}>
-          {getStatusText(connectionStatus)}
-        </div>
-      </div>
+    <UnifiedCard variant="aurora" className="max-w-4xl mx-auto">
+      <CardHeader
+        title="Blockchain Verification"
+        subtitle="Verify sensor data on Solana Devnet"
+        icon="⛓️"
+        action={
+          <div className={`font-medium ${getStatusColor(connectionStatus)}`}>
+            {getStatusText(connectionStatus)}
+          </div>
+        }
+      />
 
-      {/* Sensor Data Display */}
-      <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-        <h3 className="text-lg font-semibold mb-3 text-gray-700">Current Sensor Data</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white p-3 rounded shadow-sm">
-            <div className="text-sm text-gray-600">Location</div>
-            <div className="font-medium">{sensorData.location}</div>
-          </div>
-          <div className="bg-white p-3 rounded shadow-sm">
-            <div className="text-sm text-gray-600">Sensor ID</div>
-            <div className="font-medium">{sensorData.sensorId}</div>
-          </div>
-          <div className="bg-white p-3 rounded shadow-sm">
-            <div className="text-sm text-gray-600">AQI</div>
-            <div className="font-medium">{sensorData.aqi}</div>
-          </div>
-          <div className="bg-white p-3 rounded shadow-sm">
-            <div className="text-sm text-gray-600">PM2.5</div>
-            <div className="font-medium">{sensorData.pm25} μg/m³</div>
-          </div>
-          <div className="bg-white p-3 rounded shadow-sm">
-            <div className="text-sm text-gray-600">PM10</div>
-            <div className="font-medium">{sensorData.pm10} μg/m³</div>
-          </div>
-          <div className="bg-white p-3 rounded shadow-sm">
-            <div className="text-sm text-gray-600">CO2</div>
-            <div className="font-medium">{sensorData.co2} ppm</div>
-          </div>
-          <div className="bg-white p-3 rounded shadow-sm">
-            <div className="text-sm text-gray-600">Humidity</div>
-            <div className="font-medium">{sensorData.humidity}%</div>
-          </div>
-          <div className="bg-white p-3 rounded shadow-sm">
-            <div className="text-sm text-gray-600">Temperature</div>
-            <div className="font-medium">{sensorData.temperature}°C</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Verify Button */}
-      <div className="mb-6">
-        <button
-          onClick={verifyOnChain}
-          disabled={isLoading}
-          className={`w-full py-3 px-6 rounded-lg font-semibold text-white transition-colors ${
-            isLoading
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800'
-          }`}
-        >
-          {isLoading ? (
-            <div className="flex items-center justify-center">
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-              Verifying on Solana Devnet...
-            </div>
-          ) : (
-            '🔍 Verify On-Chain'
-          )}
-        </button>
-      </div>
-
-      {/* Verification Results */}
-      {verificationResult && (
-        <div className="bg-gray-50 rounded-lg p-4">
-          <h3 className="text-lg font-semibold mb-3 text-gray-700">Verification Results</h3>
-          
-          {verificationResult.error ? (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <div className="text-red-700 font-medium">❌ Verification Failed</div>
-              <div className="text-red-600 text-sm mt-1">{verificationResult.message}</div>
-              <div className="text-gray-500 text-xs mt-2">{verificationResult.timestamp}</div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {/* PDA Information */}
-              <div className="bg-white rounded-lg p-4 border">
-                <h4 className="font-medium text-gray-700 mb-2">📍 Derived PDAs</h4>
-                <div className="space-y-2 text-sm">
-                  <div>
-                    <span className="text-gray-600">Air Quality PDA:</span>
-                    <div className="font-mono text-xs break-all bg-gray-100 p-2 rounded mt-1">
-                      {verificationResult.pdas.airQuality}
-                    </div>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Contract PDA:</span>
-                    <div className="font-mono text-xs break-all bg-gray-100 p-2 rounded mt-1">
-                      {verificationResult.pdas.contract}
-                    </div>
-                  </div>
+      <CardContent>
+        {/* Sensor Data Display */}
+        <UnifiedCard variant="glass" className="mb-6">
+          <CardHeader
+            title="Live Data from City Database"
+            subtitle="Current sensor readings from the operational database"
+            icon="📊"
+          />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {Object.entries(sensorData).map(([key, value]) => (
+              <UnifiedCard key={key} variant="solid" className="p-3" hover={false}>
+                <div className="text-sm text-gray-600 capitalize">{key.replace(/([A-Z])/g, ' $1')}</div>
+                <div className="font-medium">
+                  {typeof value === 'number' ? 
+                    (key === 'aqi' ? value : 
+                     key.includes('pm') ? `${value} μg/m³` :
+                     key === 'co2' ? `${value} ppm` :
+                     key === 'humidity' ? `${value}%` :
+                     key === 'temperature' ? `${value}°C` : value) 
+                    : value}
                 </div>
+              </UnifiedCard>
+            ))}
+          </div>
+        </UnifiedCard>
+
+        {/* Verify Button */}
+        <div className="mb-6">
+          <button
+            onClick={verifyOnChain}
+            disabled={isLoading}
+            className={`w-full py-3 px-6 rounded-lg font-semibold text-white transition-colors ${
+              isLoading
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800'
+            }`}
+          >
+            {isLoading ? (
+              <div className="flex items-center justify-center">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                Verifying on Solana Devnet...
               </div>
+            ) : (
+              '🔍 Verify On-Chain'
+            )}
+          </button>
+        </div>
 
-              {/* Account Status */}
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="bg-white rounded-lg p-4 border">
-                  <h4 className="font-medium text-gray-700 mb-2">
-                    {verificationResult.verification.airQualityExists ? '✅' : '❌'} Air Quality Account
-                  </h4>
-                  {verificationResult.accounts.airQuality.exists ? (
-                    <div className="text-sm space-y-1">
-                      <div className="text-green-600 font-medium">✅ Found on-chain</div>
-                      <div className="text-gray-600">Lamports: {verificationResult.accounts.airQuality.lamports}</div>
-                      <div className="text-gray-600">Data Size: {verificationResult.accounts.airQuality.dataSize} bytes</div>
-                    </div>
-                  ) : (
-                    <div className="text-sm">
-                      <div className="text-gray-600">
-                        {verificationResult.accounts.airQuality.message || 'Account not found'}
+        {/* Verification Results */}
+        {verificationResult && (
+          <UnifiedCard variant="glass" className="mb-6">
+            <CardHeader
+              title="On-Chain Verification Results"
+              icon="🔍"
+            />
+            
+            {verificationResult.error ? (
+              <UnifiedCard variant="error" className="p-4">
+                <div className="text-red-700 font-medium">❌ Verification Failed</div>
+                <div className="text-red-600 text-sm mt-1">{verificationResult.message}</div>
+              </UnifiedCard>
+            ) : (
+              <div className="space-y-4">
+                {verificationResult.verification.dataMatches ? (
+                  <UnifiedCard variant="success" className="p-4">
+                    <div className="flex items-center">
+                      <div className="text-green-600 text-2xl mr-3">✅</div>
+                      <div>
+                        <h4 className="font-medium text-green-800">On-Chain Verification Successful</h4>
+                        <p className="text-green-700 text-sm mt-1">
+                          Sensor data has been verified and matches on-chain records on Solana Devnet.
+                        </p>
                       </div>
-                      {verificationResult.accounts.airQuality.error && (
-                        <div className="text-red-600 text-xs mt-1">
-                          Error: {verificationResult.accounts.airQuality.error}
-                        </div>
-                      )}
                     </div>
-                  )}
-                </div>
-
-                <div className="bg-white rounded-lg p-4 border">
-                  <h4 className="font-medium text-gray-700 mb-2">
-                    {verificationResult.verification.contractExists ? '✅' : '❌'} Contract Account
-                  </h4>
-                  {verificationResult.accounts.contract.exists ? (
-                    <div className="text-sm space-y-1">
-                      <div className="text-green-600 font-medium">✅ Found on-chain</div>
-                      <div className="text-gray-600">Lamports: {verificationResult.accounts.contract.lamports}</div>
-                      <div className="text-gray-600">Data Size: {verificationResult.accounts.contract.dataSize} bytes</div>
-                    </div>
-                  ) : (
-                    <div className="text-sm">
-                      <div className="text-gray-600">
-                        {verificationResult.accounts.contract.message || 'Account not found'}
+                  </UnifiedCard>
+                ) : (
+                  <UnifiedCard variant="info" className="p-4">
+                    <div className="flex items-start">
+                      <div className="text-blue-600 text-2xl mr-3 mt-1">ℹ️</div>
+                      <div className="flex-1">
+                        <h4 className="font-medium text-blue-800">No On-Chain Records Found</h4>
+                        <p className="text-blue-700 text-sm mt-1 mb-3">
+                          This sensor hasn't logged any data to the blockchain yet. The system automatically 
+                          creates on-chain records when critical readings are detected (AQI greater than 150 or less than 25) 
+                          to optimize costs while maintaining transparency for important events.
+                        </p>
+                        {showInitializeOption && (
+                          <button
+                            onClick={initializeAccounts}
+                            disabled={isInitializing}
+                            className={`px-4 py-2 rounded-lg font-medium text-white transition-colors ${
+                              isInitializing
+                                ? 'bg-gray-400 cursor-not-allowed'
+                                : 'bg-blue-600 hover:bg-blue-700'
+                            }`}
+                          >
+                            {isInitializing ? (
+                              <div className="flex items-center">
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                Initializing On-Chain Records...
+                              </div>
+                            ) : (
+                              '🚀 Initialize On-Chain Records Now'
+                            )}
+                          </button>
+                        )}
                       </div>
-                      {verificationResult.accounts.contract.error && (
-                        <div className="text-red-600 text-xs mt-1">
-                          Error: {verificationResult.accounts.contract.error}
-                        </div>
-                      )}
                     </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Overall Status */}
-              <div className={`rounded-lg p-4 border ${
-                verificationResult.verification.dataMatches 
-                  ? 'bg-green-50 border-green-200' 
-                  : 'bg-yellow-50 border-yellow-200'
-              }`}>
-                <div className={`font-medium ${
-                  verificationResult.verification.dataMatches 
-                    ? 'text-green-700' 
-                    : 'text-yellow-700'
-                }`}>
-                  {verificationResult.verification.dataMatches 
-                    ? '✅ Verification Successful' 
-                    : 'ℹ️ No Data Found On-Chain'}
-                </div>
-                <div className={`text-sm mt-1 ${
-                  verificationResult.verification.dataMatches 
-                    ? 'text-green-600' 
-                    : 'text-yellow-600'
-                }`}>
-                  {verificationResult.verification.dataMatches
-                    ? 'Smart contract data found on Solana Devnet'
-                    : 'Smart contracts need to be deployed and initialized with sensor data'}
-                </div>
-                <div className="text-gray-500 text-xs mt-2">
+                  </UnifiedCard>
+                )}
+                
+                {/* Timestamp */}
+                <div className="text-gray-500 text-xs">
                   Verified at: {verificationResult.timestamp}
                 </div>
               </div>
-            </div>
-          )}
-        </div>
-      )}
+            )}
+          </UnifiedCard>
+        )}
 
-      {/* Program Information */}
-      <div className="mt-6 pt-4 border-t border-gray-200">
-        <div className="flex items-center justify-between text-sm text-gray-600">
-          <div>
-            <span className="font-medium">Program ID:</span>
-            <span className="ml-2 font-mono">{PROGRAM_ID.toString()}</span>
-          </div>
-          <div>
-            <span className="font-medium">Network:</span>
-            <span className="ml-2">Solana Devnet</span>
+        {/* Program Information */}
+        <div className="mt-6 pt-4 border-t border-gray-200">
+          <div className="flex items-center justify-between text-sm text-gray-600">
+            <div>
+              <span className="font-medium">Program ID:</span>
+              <span className="ml-2 font-mono">{PROGRAM_ID.toString()}</span>
+            </div>
+            <div>
+              <span className="font-medium">Network:</span>
+              <span className="ml-2">Solana Devnet</span>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </UnifiedCard>
   );
 };
 

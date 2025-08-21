@@ -378,6 +378,95 @@ class BlockchainService {
   }
 
   /**
+   * Initialize air quality account on-chain
+   */
+  async initializeAirQualityAccount(location, sensorId, sensorData) {
+    try {
+      await this.initialize();
+
+      // Derive PDA for air quality account
+      const pdaResult = this.derivePDAs(location, sensorId);
+      const { airQualityPDA, airQualityBump } = pdaResult;
+
+      console.log(`🚀 Initializing air quality account for ${location}:${sensorId}`);
+      console.log(`📍 PDA: ${airQualityPDA.toString()}`);
+
+      // For demo purposes, simulate successful initialization
+      // In a real implementation, this would call the Solana program
+      const result = await this.updateAirQuality(location, sensorId, sensorData);
+
+      if (result.success) {
+        console.log(`✅ Air quality account initialized: ${airQualityPDA.toString()}`);
+        return {
+          success: true,
+          pda: airQualityPDA.toString(),
+          bump: airQualityBump,
+          message: 'Air quality account initialized successfully',
+          location,
+          sensorId,
+          data: sensorData
+        };
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      console.error('❌ Failed to initialize air quality account:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * Initialize contract account on-chain
+   */
+  async initializeContractAccount(location, sensorId, contractName) {
+    try {
+      await this.initialize();
+
+      // Derive PDA for contract account
+      const pdaResult = this.derivePDAs(location, sensorId, contractName);
+      const { contractPDA, contractBump } = pdaResult;
+
+      console.log(`🚀 Initializing contract account for ${location}:${sensorId}`);
+      console.log(`📍 PDA: ${contractPDA.toString()}`);
+
+      // For demo purposes, simulate successful initialization
+      const contractData = {
+        name: contractName,
+        description: `IoT service agreement for sensor ${sensorId} in ${location}`,
+        type: 'IoT Service Agreement',
+        authority: this.authority.publicKey.toString()
+      };
+
+      const result = await this.initializeContract(contractName, contractData.description, contractData.type);
+
+      if (result.success) {
+        console.log(`✅ Contract account initialized: ${contractPDA.toString()}`);
+        return {
+          success: true,
+          pda: contractPDA.toString(),
+          bump: contractBump,
+          message: 'Contract account initialized successfully',
+          location,
+          sensorId,
+          contractName,
+          data: contractData
+        };
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      console.error('❌ Failed to initialize contract account:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
    * Log administrative contract to blockchain (ALWAYS posted for transparency)
    * Administrative contracts and governance decisions are always blockchain-logged
    */

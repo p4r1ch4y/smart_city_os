@@ -25,6 +25,64 @@ router.get('/status', async (req, res) => {
 });
 
 /**
+ * @route POST /api/blockchain/initialize-accounts
+ * @desc Initialize sensor accounts on-chain
+ * @access Public (for demo purposes)
+ */
+router.post('/initialize-accounts', async (req, res) => {
+  try {
+    const { location, sensorId, sensorData } = req.body;
+
+    if (!location || !sensorId || !sensorData) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields: location, sensorId, sensorData'
+      });
+    }
+
+    // Initialize air quality account
+    const airQualityResult = await blockchainService.initializeAirQualityAccount(
+      location,
+      sensorId,
+      sensorData
+    );
+
+    // Initialize contract account
+    const contractResult = await blockchainService.initializeContractAccount(
+      location,
+      sensorId,
+      'IoT Service Agreement'
+    );
+
+    if (airQualityResult.success && contractResult.success) {
+      res.json({
+        success: true,
+        message: 'Accounts initialized successfully',
+        data: {
+          airQuality: airQualityResult,
+          contract: contractResult
+        }
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to initialize one or more accounts',
+        details: {
+          airQuality: airQualityResult,
+          contract: contractResult
+        }
+      });
+    }
+  } catch (error) {
+    console.error('Account initialization error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to initialize accounts: ' + error.message
+    });
+  }
+});
+
+/**
  * @route GET /api/blockchain/transparency-report
  * @desc Get transparency report from blockchain
  * @access Private
