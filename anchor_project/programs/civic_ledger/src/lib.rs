@@ -14,7 +14,7 @@ pub use errors::*;
 pub use events::*;
 pub use utils::*;
 
-declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
+declare_id!("A8vwRav21fjK55vLQXxDZD8WFLP5cvFyYfBaEsTcy5An");
 
 /// Smart City OS - Civic Ledger Program
 ///

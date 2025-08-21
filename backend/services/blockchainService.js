@@ -8,7 +8,7 @@ const { Connection, PublicKey, Keypair } = require('@solana/web3.js');
 class BlockchainService {
   constructor() {
     this.connection = new Connection('https://api.devnet.solana.com', 'confirmed');
-    this.programId = new PublicKey('Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS');
+    this.programId = new PublicKey('A8vwRav21fjK55vLQXxDZD8WFLP5cvFyYfBaEsTcy5An');
     this.isInitialized = false;
     this.transactionQueue = [];
     this.processingQueue = false;

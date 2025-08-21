@@ -5,10 +5,10 @@ seeds = false
 skip-lint = false
 
 [programs.localnet]
-civic_ledger = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+civic_ledger = "A8vwRav21fjK55vLQXxDZD8WFLP5cvFyYfBaEsTcy5An"
 
 [programs.devnet]
-civic_ledger = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+civic_ledger = "A8vwRav21fjK55vLQXxDZD8WFLP5cvFyYfBaEsTcy5An"
 
 [registry]
 url = "https://api.apr.dev"
