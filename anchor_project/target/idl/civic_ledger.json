@@ -1,1 +1,453 @@
-{"version":"0.1.0","name":"civic_ledger","metadata":{"address":"A8vwRav21fjK55vLQXxDZD8WFLP5cvFyYfBaEsTcy5An"},"instructions":[{"name":"initializeAirQuality","accounts":[{"name":"airQuality","isMut":true,"isSigner":false},{"name":"authority","isMut":true,"isSigner":true},{"name":"systemProgram","isMut":false,"isSigner":false}],"args":[{"name":"location","type":"string"},{"name":"sensorId","type":"string"}]},{"name":"updateAirQuality","accounts":[{"name":"airQuality","isMut":true,"isSigner":false},{"name":"authority","isMut":false,"isSigner":true}],"args":[{"name":"aqi","type":"u16"},{"name":"pm25","type":"f32"},{"name":"pm10","type":"f32"},{"name":"co2","type":"f32"},{"name":"humidity","type":"f32"},{"name":"temperature","type":"f32"}]},{"name":"initializeContract","accounts":[{"name":"contract","isMut":true,"isSigner":false},{"name":"authority","isMut":true,"isSigner":true},{"name":"systemProgram","isMut":false,"isSigner":false}],"args":[{"name":"name","type":"string"},{"name":"description","type":"string"},{"name":"contractType","type":"string"}]},{"name":"updateContractStatus","accounts":[{"name":"contract","isMut":true,"isSigner":false},{"name":"authority","isMut":false,"isSigner":true}],"args":[{"name":"isActive","type":"bool"}]}],"accounts":[{"name":"AirQuality","type":{"kind":"struct","fields":[{"name":"location","type":"string"},{"name":"sensorId","type":"string"},{"name":"authority","type":"publicKey"},{"name":"aqi","type":"u16"},{"name":"pm25","type":"f32"},{"name":"pm10","type":"f32"},{"name":"co2","type":"f32"},{"name":"humidity","type":"f32"},{"name":"temperature","type":"f32"},{"name":"createdAt","type":"i64"},{"name":"updatedAt","type":"i64"}]}},{"name":"Contract","type":{"kind":"struct","fields":[{"name":"name","type":"string"},{"name":"description","type":"string"},{"name":"contractType","type":"string"},{"name":"authority","type":"publicKey"},{"name":"isActive","type":"bool"},{"name":"createdAt","type":"i64"},{"name":"updatedAt","type":"i64"}]}}],"errors":[{"code":6000,"name":"UnauthorizedAccess","msg":"Unauthorized access"}]}
+{
+  "version": "0.1.0",
+  "name": "civic_ledger",
+  "metadata": {
+    "address": "A8vwRav21fjK55vLQXxDZD8WFLP5cvFyYfBaEsTcy5An"
+  },
+  "instructions": [
+    {
+      "name": "initializeAirQuality",
+      "accounts": [
+        {
+          "name": "airQuality",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "location",
+          "type": "string"
+        },
+        {
+          "name": "sensorId",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "updateAirQuality",
+      "accounts": [
+        {
+          "name": "airQuality",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "aqi",
+          "type": "u16"
+        },
+        {
+          "name": "pm25",
+          "type": "f32"
+        },
+        {
+          "name": "pm10",
+          "type": "f32"
+        },
+        {
+          "name": "co2",
+          "type": "f32"
+        },
+        {
+          "name": "humidity",
+          "type": "f32"
+        },
+        {
+          "name": "temperature",
+          "type": "f32"
+        }
+      ]
+    },
+    {
+      "name": "batchUpdateAirQuality",
+      "accounts": [
+        {
+          "name": "airQuality1",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "airQuality2",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "airQuality3",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "sensorData",
+          "type": {
+            "vec": {
+              "defined": "(u16,f32,f32,f32,f32,f32)"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "initializeContract",
+      "accounts": [
+        {
+          "name": "contract",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "description",
+          "type": "string"
+        },
+        {
+          "name": "contractType",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "updateContractStatus",
+      "accounts": [
+        {
+          "name": "contract",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "isActive",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "updateContractDetails",
+      "accounts": [
+        {
+          "name": "contract",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "name",
+          "type": {
+            "option": "string"
+          }
+        },
+        {
+          "name": "description",
+          "type": {
+            "option": "string"
+          }
+        },
+        {
+          "name": "contractType",
+          "type": {
+            "option": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "executeContract",
+      "accounts": [
+        {
+          "name": "contract",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "batchContractStatusUpdate",
+      "accounts": [
+        {
+          "name": "contract1",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "contract2",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "statuses",
+          "type": {
+            "vec": "bool"
+          }
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "AirQuality",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "location",
+            "type": "string"
+          },
+          {
+            "name": "sensorId",
+            "type": "string"
+          },
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "aqi",
+            "type": "u16"
+          },
+          {
+            "name": "pm25",
+            "type": "f32"
+          },
+          {
+            "name": "pm10",
+            "type": "f32"
+          },
+          {
+            "name": "co2",
+            "type": "f32"
+          },
+          {
+            "name": "humidity",
+            "type": "f32"
+          },
+          {
+            "name": "temperature",
+            "type": "f32"
+          },
+          {
+            "name": "createdAt",
+            "type": "i64"
+          },
+          {
+            "name": "updatedAt",
+            "type": "i64"
+          },
+          {
+            "name": "updateCount",
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Contract",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "contractType",
+            "type": "string"
+          },
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "isActive",
+            "type": "bool"
+          },
+          {
+            "name": "createdAt",
+            "type": "i64"
+          },
+          {
+            "name": "updatedAt",
+            "type": "i64"
+          },
+          {
+            "name": "version",
+            "type": "u32"
+          },
+          {
+            "name": "executionCount",
+            "type": "u32"
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "UnauthorizedAccess",
+      "msg": "Unauthorized access"
+    },
+    {
+      "code": 6001,
+      "name": "InvalidAQIValue",
+      "msg": "Invalid AQI value (must be 0-500)"
+    },
+    {
+      "code": 6002,
+      "name": "InvalidPM25Value",
+      "msg": "Invalid PM2.5 value (must be 0-1000)"
+    },
+    {
+      "code": 6003,
+      "name": "InvalidPM10Value",
+      "msg": "Invalid PM10 value (must be 0-1000)"
+    },
+    {
+      "code": 6004,
+      "name": "InvalidCO2Value",
+      "msg": "Invalid CO2 value (must be 0-10000)"
+    },
+    {
+      "code": 6005,
+      "name": "InvalidHumidityValue",
+      "msg": "Invalid humidity value (must be 0-100)"
+    },
+    {
+      "code": 6006,
+      "name": "InvalidTemperatureValue",
+      "msg": "Invalid temperature value (must be -50 to 100)"
+    },
+    {
+      "code": 6007,
+      "name": "NameTooLong",
+      "msg": "Name too long (max 50 characters)"
+    },
+    {
+      "code": 6008,
+      "name": "DescriptionTooLong",
+      "msg": "Description too long (max 200 characters)"
+    },
+    {
+      "code": 6009,
+      "name": "ContractTypeTooLong",
+      "msg": "Contract type too long (max 30 characters)"
+    },
+    {
+      "code": 6010,
+      "name": "ContractInactive",
+      "msg": "Contract is inactive"
+    },
+    {
+      "code": 6011,
+      "name": "InvalidInput",
+      "msg": "Invalid input provided"
+    },
+    {
+      "code": 6012,
+      "name": "OperationNotPermitted",
+      "msg": "Operation not permitted"
+    },
+    {
+      "code": 6013,
+      "name": "AccountAlreadyExists",
+      "msg": "Account already exists"
+    },
+    {
+      "code": 6014,
+      "name": "AccountNotFound",
+      "msg": "Account not found"
+    },
+    {
+      "code": 6015,
+      "name": "InsufficientPermissions",
+      "msg": "Insufficient permissions"
+    },
+    {
+      "code": 6016,
+      "name": "DataValidationFailed",
+      "msg": "Data validation failed"
+    },
+    {
+      "code": 6017,
+      "name": "UpdateThresholdNotMet",
+      "msg": "Update threshold not met"
+    },
+    {
+      "code": 6018,
+      "name": "BatchOperationLimitExceeded",
+      "msg": "Batch operation limit exceeded"
+    },
+    {
+      "code": 6019,
+      "name": "EconomicThresholdNotMet",
+      "msg": "Economic threshold not met for update"
+    }
+  ]
+}
