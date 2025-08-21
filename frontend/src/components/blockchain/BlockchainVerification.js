@@ -3,7 +3,7 @@ import { Connection, PublicKey } from '@solana/web3.js';
 import { Program, AnchorProvider, web3 } from '@coral-xyz/anchor';
 import { toast } from 'react-toastify';
 
-const PROGRAM_ID = new PublicKey('Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS');
+const PROGRAM_ID = new PublicKey('A8vwRav21fjK55vLQXxDZD8WFLP5cvFyYfBaEsTcy5An');
 const DEVNET_ENDPOINT = 'https://api.devnet.solana.com';
 
 const BlockchainVerification = () => {

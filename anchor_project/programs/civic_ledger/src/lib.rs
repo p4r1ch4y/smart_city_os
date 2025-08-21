@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-declare_id!("7jGiTQRkU66HczW2rSBDYbvnvMPxtsVYR72vpa9a7qF2");
+declare_id!("A8vwRav21fjK55vLQXxDZD8WFLP5cvFyYfBaEsTcy5An");
 
 #[program]
 pub mod civic_ledger {
