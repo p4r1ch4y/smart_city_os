@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTheme } from '../contexts/ThemeContext';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { CpuChipIcon, GlobeAltIcon, BoltIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
@@ -27,8 +28,9 @@ function IndianGradientBG() {
   );
 }
 
-export default function Landing() {
+export default function Landing() { 
   const { city, cityKey, setCity, cities } = useCity();
+  const { theme, toggleTheme } = useTheme();
   const [imageError, setImageError] = useState(false);
   const [useDefault, setUseDefault] = useState(false);
 
@@ -80,23 +82,23 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden text-white">
+    <div className={`min-h-screen relative overflow-hidden text-white ${theme === 'dark' ? 'dark' : ''}`}>
       <IndianGradientBG />
 
       {/* Indian Cultural Header */}
-      <div className="absolute top-0 left-0 right-0 backdrop-blur-md bg-white/10 border-b border-orange-200/30 paisley-accent">
+  <div className="absolute top-0 left-0 right-0 backdrop-blur-md bg-white/10 dark:bg-gray-900 border-b border-orange-200/30 paisley-accent">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-9 h-9 bg-gradient-to-br from-orange-400 to-orange-600 rounded-xl flex items-center justify-center shadow-lg">
               <CpuChipIcon className="w-5 h-5 text-white" />
             </div>
             <div className="flex flex-col">
-              <span className="font-extrabold tracking-tight text-lg">Smart City OS</span>
+              <span className="font-extrabold tracking-tight text-lg dark:text-white">Smart City OS</span>
               <span className="text-xs opacity-80 font-medium">भारत डिजिटल शहर</span>
             </div>
           </div>
 
-          {/* City selector */}
+          {/* City selector and theme toggle */}
           <div className="flex items-center space-x-3">
             <label className="text-sm opacity-80">City</label>
             <select
@@ -108,12 +110,20 @@ export default function Landing() {
                 <option key={key} value={key} className="text-gray-900">{key}</option>
               ))}
             </select>
+            {/* Theme toggle button */}
+            <button
+              onClick={toggleTheme}
+              className="ml-4 px-3 py-1.5 rounded-lg border border-white/20 bg-white/10 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-white/40 transition"
+              aria-label="Toggle theme"
+            >
+              {theme === 'dark' ? '🌙 Dark' : '☀️ Light'}
+            </button>
           </div>
         </div>
       </div>
 
       {/* Hero */}
-      <section className="relative pt-28 pb-20">
+  <section className="relative pt-28 pb-20 dark:bg-gray-900">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-10 items-center">
             <div>
@@ -121,7 +131,7 @@ export default function Landing() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
-                className="text-5xl md:text-6xl font-extrabold leading-tight drop-shadow-sm"
+                className="text-5xl md:text-6xl font-extrabold leading-tight drop-shadow-sm dark:text-white"
               >
                 <span className="block text-2xl md:text-3xl font-medium mb-2 text-orange-200">
                   डिजिटल भारत • Digital India
@@ -135,7 +145,7 @@ export default function Landing() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1, duration: 0.6 }}
-                className="mt-6 text-white/80 text-lg max-w-xl"
+                className="mt-6 text-white/80 text-lg max-w-xl dark:text-gray-300"
               >
                 Empowering Indian cities with cutting-edge IoT, AI, and blockchain technology.
                 Transform urban infrastructure into intelligent, sustainable, and citizen-centric ecosystems
@@ -145,7 +155,7 @@ export default function Landing() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15, duration: 0.6 }}
-                className="mt-4 flex items-center space-x-4 text-sm text-orange-200"
+                className="mt-4 flex items-center space-x-4 text-sm text-orange-200 dark:text-orange-100"
               >
                 <span>🇮🇳 Made in India</span>
                 <span>•</span>
