@@ -2,6 +2,10 @@ const express = require('express');
 const router = express.Router();
 const { authMiddleware } = require('../middleware/auth');
 const blockchainService = require('../services/blockchainService');
+const RealBlockchainService = require('../services/realBlockchainService');
+
+// Create instance of real blockchain service for actual transactions
+const realBlockchainService = new RealBlockchainService();
 
 /**
  * @route GET /api/blockchain/status
@@ -40,15 +44,17 @@ router.post('/initialize-accounts', async (req, res) => {
       });
     }
 
-    // Initialize air quality account
-    const airQualityResult = await blockchainService.initializeAirQualityAccount(
+    console.log(`🚀 REAL BLOCKCHAIN: Initializing accounts for ${location}:${sensorId}`);
+
+    // Use REAL blockchain service for actual transactions
+    const airQualityResult = await realBlockchainService.initializeAirQualityAccount(
       location,
       sensorId,
       sensorData
     );
 
     // Initialize contract account
-    const contractResult = await blockchainService.initializeContractAccount(
+    const contractResult = await realBlockchainService.initializeContractAccount(
       location,
       sensorId,
       'IoT Service Agreement'
@@ -110,6 +116,54 @@ router.get('/transparency-report', authMiddleware, async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to generate transparency report'
+    });
+  }
+});
+
+/**
+ * @route GET /api/blockchain/account-info/:location/:sensorId
+ * @desc Get real account information from Solana blockchain
+ * @access Public
+ */
+router.get('/account-info/:location/:sensorId', async (req, res) => {
+  try {
+    const { location, sensorId } = req.params;
+    
+    if (!location || !sensorId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing location or sensorId parameters'
+      });
+    }
+
+    console.log(`🔍 REAL BLOCKCHAIN: Getting account info for ${location}:${sensorId}`);
+
+    // Use REAL blockchain service to get actual account data
+    const accountInfo = await realBlockchainService.getAccountInfo(location, sensorId);
+    
+    if (accountInfo.success === false) {
+      return res.status(500).json({
+        success: false,
+        error: accountInfo.error
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        location,
+        sensorId,
+        accounts: accountInfo,
+        network: 'solana-devnet',
+        programId: 'A8vwRav21fjK55vLQXxDZD8WFLP5cvFyYfBaEsTcy5An',
+        verifiedAt: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    console.error('Real account info error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get real account information: ' + error.message
     });
   }
 });

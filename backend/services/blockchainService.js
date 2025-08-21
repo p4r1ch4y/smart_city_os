@@ -7,8 +7,14 @@ const { Connection, PublicKey, Keypair } = require('@solana/web3.js');
 
 class BlockchainService {
   constructor() {
-    this.connection = new Connection('https://api.devnet.solana.com', 'confirmed');
+    // Use environment variables for network configuration
+    const rpcUrl = process.env.SOLANA_RPC_URL || 'https://api.devnet.solana.com';
+    const network = process.env.SOLANA_NETWORK || 'devnet';
+    
+    this.connection = new Connection(rpcUrl, 'confirmed');
     this.programId = new PublicKey('A8vwRav21fjK55vLQXxDZD8WFLP5cvFyYfBaEsTcy5An');
+    this.network = network;
+    this.rpcUrl = rpcUrl;
     this.isInitialized = false;
     this.transactionQueue = [];
     this.processingQueue = false;
@@ -19,21 +25,50 @@ class BlockchainService {
 
     try {
       console.log('Initializing School of Solana blockchain service...');
+      console.log(`Network: ${this.network}`);
+      console.log(`RPC URL: ${this.rpcUrl}`);
       
-      // For demo purposes, generate a keypair
-      // In production, this would be loaded from secure storage
-      this.keypair = Keypair.generate();
+      // Try to load authority keypair from environment or generate deterministic one
+      const authoritySecretKey = process.env.SOLANA_AUTHORITY_SECRET_KEY;
       
-      // Request airdrop for demo purposes
-      try {
-        const airdropSignature = await this.connection.requestAirdrop(
-          this.keypair.publicKey,
-          1000000000 // 1 SOL
-        );
-        await this.connection.confirmTransaction(airdropSignature);
-        console.log('Airdrop successful for blockchain service');
-      } catch (airdropError) {
-        console.warn('Airdrop failed, continuing without funds:', airdropError.message);
+      if (authoritySecretKey) {
+        // Load keypair from environment (base58 encoded secret key)
+        try {
+          const secretKeyArray = JSON.parse(authoritySecretKey);
+          this.keypair = Keypair.fromSecretKey(new Uint8Array(secretKeyArray));
+          console.log('Loaded authority keypair from environment');
+        } catch (parseError) {
+          console.warn('Failed to parse SOLANA_AUTHORITY_SECRET_KEY, generating new keypair');
+          this.keypair = Keypair.generate();
+        }
+      } else {
+        // Generate deterministic keypair for consistent authority
+        // Using a seed based on program ID for consistency
+        const seed = this.programId.toBuffer().slice(0, 32);
+        this.keypair = Keypair.fromSeed(seed);
+        console.log('Generated deterministic authority keypair');
+      }
+      
+      // Request airdrop for demo purposes (only on devnet/localnet)
+      if (this.network !== 'mainnet') {
+        try {
+          const balance = await this.connection.getBalance(this.keypair.publicKey);
+          console.log(`Current balance: ${balance / 1e9} SOL`);
+          
+          if (balance < 100000000) { // Less than 0.1 SOL
+            console.log('Requesting airdrop...');
+            const airdropSignature = await this.connection.requestAirdrop(
+              this.keypair.publicKey,
+              1000000000 // 1 SOL
+            );
+            await this.connection.confirmTransaction(airdropSignature);
+            console.log('Airdrop successful for blockchain service');
+          } else {
+            console.log('Sufficient balance, skipping airdrop');
+          }
+        } catch (airdropError) {
+          console.warn('Airdrop failed, continuing without funds:', airdropError.message);
+        }
       }
 
       this.isInitialized = true;

@@ -12,6 +12,7 @@ const BlockchainVerification = () => {
   const [verificationResult, setVerificationResult] = useState(null);
   const [connectionStatus, setConnectionStatus] = useState('disconnected');
   const [showInitializeOption, setShowInitializeOption] = useState(false);
+  const [initializationResult, setInitializationResult] = useState(null);
 
   // Sample sensor data for verification
   const sensorData = {
@@ -70,8 +71,11 @@ const BlockchainVerification = () => {
     };
   }, []);
 
-  const verifyOnChain = useCallback(async () => {
+  const verifyOnChain = useCallback(async (preserveInitResults = true) => {
     setIsLoading(true);
+    if (!preserveInitResults) {
+      setInitializationResult(null); // Clear previous initialization results only if explicitly requested
+    }
     try {
       const connection = await connectToSolana();
       const pdas = derivePDAs(sensorData.location, sensorData.sensorId);
@@ -152,9 +156,10 @@ const BlockchainVerification = () => {
       if (result.success) {
         toast.success('✅ Accounts initialized successfully! You can now verify on-chain data.');
         setShowInitializeOption(false);
+        setInitializationResult(result.data); // Store the detailed blockchain info
         // Automatically re-verify after initialization
         setTimeout(() => {
-          verifyOnChain();
+          verifyOnChain(true); // Preserve initialization results
         }, 2000);
       } else {
         toast.error(`❌ Failed to initialize accounts: ${result.error}`);
@@ -227,7 +232,7 @@ const BlockchainVerification = () => {
         {/* Verify Button */}
         <div className="mb-6">
           <button
-            onClick={verifyOnChain}
+            onClick={() => verifyOnChain(true)} // Keep initialization results visible
             disabled={isLoading}
             className={`w-full py-3 px-6 rounded-lg font-semibold text-white transition-colors ${
               isLoading
@@ -315,6 +320,123 @@ const BlockchainVerification = () => {
                 </div>
               </div>
             )}
+          </UnifiedCard>
+        )}
+
+        {/* Blockchain Initialization Results */}
+        {initializationResult && (
+          <UnifiedCard variant="aurora" className="mt-4">
+            <CardHeader
+              title="🚀 Blockchain Deployment Details"
+              subtitle="Account initialization and transaction information"
+              icon="⛓️"
+            />
+            <CardContent>
+              <div className="space-y-4">
+                {/* Air Quality Account */}
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <h4 className="font-semibold text-green-800 mb-2">📊 Air Quality Account</h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="text-green-700 font-medium">Status:</span>
+                      <span className="text-green-600">✅ {initializationResult.airQuality.success ? 'Initialized' : 'Failed'}</span>
+                    </div>
+                    <div className="flex items-start justify-between">
+                      <span className="text-green-700 font-medium">PDA Address:</span>
+                      <span className="text-green-600 font-mono text-xs break-all ml-2">{initializationResult.airQuality.pda}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-green-700 font-medium">Transaction ID:</span>
+                      <span className="text-green-600 font-mono text-xs">{initializationResult.airQuality.signature}</span>
+                    </div>
+                    <div className="text-green-600 text-xs mt-2 p-2 bg-green-100 rounded">
+                      {initializationResult.airQuality.message}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Contract Account */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h4 className="font-semibold text-blue-800 mb-2">📋 Contract Account</h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="text-blue-700 font-medium">Status:</span>
+                      <span className="text-blue-600">✅ {initializationResult.contract.success ? 'Initialized' : 'Failed'}</span>
+                    </div>
+                    <div className="flex items-start justify-between">
+                      <span className="text-blue-700 font-medium">PDA Address:</span>
+                      <span className="text-blue-600 font-mono text-xs break-all ml-2">{initializationResult.contract.pda}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-blue-700 font-medium">Transaction ID:</span>
+                      <span className="text-blue-600 font-mono text-xs">{initializationResult.contract.signature}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-blue-700 font-medium">Contract Type:</span>
+                      <span className="text-blue-600">{initializationResult.contract.contractName}</span>
+                    </div>
+                    <div className="text-blue-600 text-xs mt-2 p-2 bg-blue-100 rounded">
+                      {initializationResult.contract.message}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Blockchain Network Info */}
+                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                  <h4 className="font-semibold text-purple-800 mb-2">🌐 Network Information</h4>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-purple-700 font-medium">Network:</span>
+                      <span className="text-purple-600 ml-2">Solana Devnet</span>
+                    </div>
+                    <div>
+                      <span className="text-purple-700 font-medium">Program ID:</span>
+                      <span className="text-purple-600 font-mono text-xs ml-2">{PROGRAM_ID.toString()}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Explorer Links */}
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <h4 className="font-semibold text-gray-800 mb-2">🔍 Blockchain Explorer</h4>
+                  <div className="space-y-2">
+                    <a
+                      href={`https://explorer.solana.com/address/${initializationResult.airQuality.pda}?cluster=devnet`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block text-blue-600 hover:text-blue-800 text-sm underline"
+                    >
+                      View Air Quality Account on Solana Explorer →
+                    </a>
+                    <a
+                      href={`https://explorer.solana.com/address/${initializationResult.contract.pda}?cluster=devnet`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block text-blue-600 hover:text-blue-800 text-sm underline"
+                    >
+                      View Contract Account on Solana Explorer →
+                    </a>
+                    <a
+                      href={`https://explorer.solana.com/address/${PROGRAM_ID.toString()}?cluster=devnet`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block text-blue-600 hover:text-blue-800 text-sm underline"
+                    >
+                      View Smart Contract Program on Solana Explorer →
+                    </a>
+                  </div>
+                  
+                  <div className="mt-3 pt-3 border-t border-gray-300">
+                    <button
+                      onClick={() => setInitializationResult(null)}
+                      className="text-gray-600 hover:text-gray-800 text-sm underline"
+                    >
+                      Hide Deployment Details
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
           </UnifiedCard>
         )}
 
