@@ -27,7 +27,7 @@ RUN chmod +x main.py
 
 # Health check
 HEALTHCHECK --interval=60s --timeout=10s --start-period=30s --retries=3 \
-  CMD python -c "import requests; requests.get('http://backend:3000/health', timeout=5)" || exit 1
+  CMD python -c "import requests; requests.get('http://backend:3030/health', timeout=5)" || exit 1
 
 # Start the simulation
 CMD ["python", "main.py", "--duration", "0"]

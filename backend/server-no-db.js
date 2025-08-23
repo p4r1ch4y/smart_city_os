@@ -67,6 +67,9 @@ const initializeMockData = () => {
   console.log(`✅ Initialized ${sensors.length} mock sensors`);
 };
 
+// Import blockchain routes
+const blockchainRoutes = require('./routes/blockchain');
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({
@@ -78,6 +81,9 @@ app.get('/health', (req, res) => {
     alerts: alerts.length
   });
 });
+
+// Mount blockchain routes
+app.use('/api/blockchain', blockchainRoutes);
 
 // Auth endpoints (mock)
 app.post('/api/auth/register', (req, res) => {

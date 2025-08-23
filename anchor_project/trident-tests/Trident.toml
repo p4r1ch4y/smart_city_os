@@ -1,0 +1,6 @@
+[fuzz.metrics]
+enabled = true
+
+[[fuzz.programs]]
+address = "A8vwRav21fjK55vLQXxDZD8WFLP5cvFyYfBaEsTcy5An"
+program = "../target/deploy/civic_ledger.so"
