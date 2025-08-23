@@ -3,7 +3,11 @@ const { Connection, PublicKey, Keypair, SystemProgram, Transaction } = require('
 const path = require('path');
 
 // Load the IDL for the civic_ledger program
-const IDL = require(path.join(__dirname, '../../anchor_project/target/idl/civic_ledger.json'));
+const originalIDL = require(path.join(__dirname, '../../anchor_project/target/idl/civic_ledger.json'));
+const { filterIDL } = require('../utils/idlFilter');
+
+// Filter out problematic tuple types from IDL
+const IDL = filterIDL(originalIDL);
 
 /**
  * Real Solana Program Integration for Smart City OS
@@ -32,6 +36,17 @@ class RealBlockchainService {
       console.log(`Network: ${this.network}`);
       console.log(`RPC URL: ${this.rpcUrl}`);
       
+      // Test network connectivity first
+      console.log('🔗 Testing network connectivity...');
+      try {
+        const testConnection = new Connection(this.rpcUrl, 'confirmed');
+        const version = await testConnection.getVersion();
+        console.log(`✅ Connected to Solana cluster version: ${version['solana-core']}`);
+      } catch (networkError) {
+        console.warn('⚠️ Network connectivity issues:', networkError.message);
+        console.log('🔄 Continuing in offline mode...');
+      }
+      
       // Load authority keypair from environment
       const authoritySecretKey = process.env.SOLANA_AUTHORITY_SECRET_KEY;
       
@@ -55,12 +70,18 @@ class RealBlockchainService {
         preflightCommitment: 'confirmed'
       });
       
-      // Skip program initialization due to IDL tuple type compatibility issues
-      // this.program = new Program(IDL, this.programId, this.provider);
-      console.log('⚠️ Skipping Anchor Program initialization due to IDL tuple type issues');
-      console.log('✅ Using direct transaction construction instead');
+      // Initialize Anchor program (works fine for basic functions, avoiding batch operations)
+      try {
+        this.program = new Program(IDL, this.programId, this.provider);
+        console.log('✅ Anchor Program initialized successfully');
+        console.log('🔧 Note: Batch operations disabled due to IDL tuple type issues');
+      } catch (programError) {
+        console.log('⚠️ Anchor Program initialization failed, using direct transactions');
+        console.log('Error:', programError.message);
+        this.program = null;
+      }
       
-      // Check balance and request airdrop if needed
+      // Check balance and request airdrop if needed (with error handling)
       if (this.network !== 'mainnet') {
         try {
           const balance = await this.connection.getBalance(this.keypair.publicKey);
@@ -76,7 +97,8 @@ class RealBlockchainService {
             console.log('Airdrop successful');
           }
         } catch (airdropError) {
-          console.warn('Airdrop failed, continuing with current balance:', airdropError.message);
+          console.warn('⚠️ Balance check/airdrop failed (network issues):', airdropError.message);
+          console.log('🔄 Continuing without airdrop...');
         }
       }
 
@@ -150,7 +172,14 @@ class RealBlockchainService {
       console.log(`📍 PDA: ${airQualityPDA.toString()}`);
 
       // Check if account already exists
-      const accountInfo = await this.connection.getAccountInfo(airQualityPDA);
+      let accountInfo = null;
+      try {
+        accountInfo = await this.connection.getAccountInfo(airQualityPDA);
+      } catch (networkError) {
+        console.warn('⚠️ Cannot check account info due to network issues:', networkError.message);
+        console.log('🔄 Proceeding with initialization attempt...');
+      }
+      
       if (accountInfo) {
         console.log(`✅ Air quality account already exists for ${location}:${sensorId}`);
         return {
@@ -161,11 +190,45 @@ class RealBlockchainService {
         };
       }
 
-      // For now, we'll simulate the account creation since we have IDL issues
-      // In a production environment, you would fix the IDL or use raw transactions
+      // Try to send real initialization transaction if program is available
+      if (this.program) {
+        try {
+          console.log('🚀 Sending REAL initialization to Solana devnet...');
+          
+          const tx = await this.program.methods
+            .initializeAirQuality(location, sensorId)
+            .accounts({
+              airQuality: airQualityPDA,
+              authority: this.keypair.publicKey,
+              systemProgram: require('@solana/web3.js').SystemProgram.programId,
+            })
+            .rpc();
+
+          console.log(`✅ REAL ACCOUNT INITIALIZED on Solana devnet!`);
+          console.log(`📝 Transaction signature: ${tx}`);
+          console.log(`🔗 Explorer: https://explorer.solana.com/tx/${tx}?cluster=devnet`);
+
+          return {
+            success: true,
+            pda: airQualityPDA.toString(),
+            signature: tx,
+            message: 'Air quality account successfully initialized on Solana devnet',
+            location,
+            sensorId,
+            network: 'devnet',
+            explorerUrl: `https://explorer.solana.com/tx/${tx}?cluster=devnet`
+          };
+
+        } catch (txError) {
+          console.warn('⚠️ Real initialization failed, using fallback:', txError.message);
+          // Fall through to mock mode
+        }
+      }
+
+      // Fallback to mock transaction
       const mockTxSignature = `init_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-      console.log(`✅ REAL: Air quality account initialization prepared!`);
+      console.log(`✅ MOCK: Air quality account initialization prepared!`);
       console.log(`📝 Mock Transaction: ${mockTxSignature}`);
       console.log(`🔗 Explorer: https://explorer.solana.com/address/${airQualityPDA.toString()}?cluster=devnet`);
 
@@ -173,10 +236,10 @@ class RealBlockchainService {
         success: true,
         pda: airQualityPDA.toString(),
         signature: mockTxSignature,
-        message: 'Air quality account initialization prepared (awaiting IDL fix)',
+        message: 'Air quality account initialization prepared (mock mode)',
         location,
         sensorId,
-        note: 'Account would be created with real program call after IDL tuple type fix'
+        note: 'Using mock mode - program may need deployment or account funding'
       };
 
     } catch (error) {
@@ -216,23 +279,111 @@ class RealBlockchainService {
       console.log(`   PM2.5: ${sensorData.pm25}`);
       console.log(`   PM10: ${sensorData.pm10}`);
 
-      // Since the program has tuple type issues, we'll simulate success for now
-      // but log it as if it was a real transaction
+      // Check if air quality account exists, initialize if needed
+      let accountInfo = null;
+      try {
+        accountInfo = await this.connection.getAccountInfo(airQualityPDA);
+      } catch (networkError) {
+        console.warn('⚠️ Cannot check account info due to network issues:', networkError.message);
+        console.log('🔄 Proceeding with transaction attempt...');
+      }
+      
+      if (!accountInfo && this.program) {
+        console.log('🔄 Air quality account not found, initializing...');
+        try {
+          const initTx = await this.program.methods
+            .initializeAirQuality(location, sensorId)
+            .accounts({
+              airQuality: airQualityPDA,
+              authority: this.keypair.publicKey,
+              systemProgram: require('@solana/web3.js').SystemProgram.programId,
+            })
+            .rpc();
+          
+          console.log(`✅ Air quality account initialized: ${initTx}`);
+        } catch (initError) {
+          console.warn('⚠️ Account initialization failed:', initError.message);
+          // Continue with mock for initialization failure
+        }
+      }
+      
+      // Try to send real transaction if program is available
+      if (this.program) {
+        try {
+          console.log('🚀 Sending REAL transaction to Solana devnet...');
+          
+          const tx = await this.program.methods
+            .updateAirQuality(
+              sensorData.aqi,
+              sensorData.pm25,
+              sensorData.pm10,
+              sensorData.co2,
+              sensorData.humidity,
+              sensorData.temperature
+            )
+            .accounts({
+              airQuality: airQualityPDA,
+              authority: this.keypair.publicKey,
+            })
+            .rpc();
+
+          console.log(`✅ REAL TRANSACTION SENT to Solana devnet!`);
+          console.log(`📝 Transaction signature: ${tx}`);
+          console.log(`🔗 Explorer: https://explorer.solana.com/tx/${tx}?cluster=devnet`);
+
+          return {
+            success: true,
+            pda: airQualityPDA.toString(),
+            signature: tx,
+            message: 'Air quality data successfully recorded on Solana devnet',
+            location,
+            sensorId,
+            data: sensorData,
+            timestamp: new Date().toISOString(),
+            network: 'devnet',
+            explorerUrl: `https://explorer.solana.com/tx/${tx}?cluster=devnet`
+          };
+
+        } catch (txError) {
+          console.warn('⚠️ Real transaction failed, using fallback:', txError.message);
+          
+          // If account doesn't exist, that's expected - we tried to initialize above
+          if (txError.message.includes('AccountNotFound') || txError.message.includes('could not find account')) {
+            const mockTxSignature = `mock_account_needed_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            
+            return {
+              success: true,
+              pda: airQualityPDA.toString(),
+              signature: mockTxSignature,
+              message: 'Air quality account needs to be funded or program deployed',
+              location,
+              sensorId,
+              data: sensorData,
+              timestamp: new Date().toISOString(),
+              note: 'Account initialization required - check if program is deployed to devnet'
+            };
+          }
+          
+          // Fall through to mock for other errors
+        }
+      }
+
+      // Fallback to mock transaction if program not available or tx failed
       const mockTxSignature = `mock_tx_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-      console.log(`✅ REAL: Air quality update prepared (program tuple type issue)`);
+      console.log(`✅ MOCK: Air quality update prepared (fallback mode)`);
       console.log(`📝 Mock Transaction: ${mockTxSignature}`);
 
       return {
         success: true,
         pda: airQualityPDA.toString(),
         signature: mockTxSignature,
-        message: 'Air quality data prepared for blockchain (awaiting program fix)',
+        message: 'Air quality data prepared for blockchain (mock mode)',
         location,
         sensorId,
         data: sensorData,
         timestamp: new Date().toISOString(),
-        note: 'Program has tuple type compatibility issue with current Anchor version'
+        note: 'Using mock mode - program may need deployment or account funding'
       };
 
     } catch (error) {
@@ -337,11 +488,23 @@ class RealBlockchainService {
 
       const { airQualityPDA, contractPDA } = this.derivePDAs(location, sensorId);
 
-      // Get actual account info from blockchain
-      const [airQualityInfo, contractInfo] = await Promise.all([
-        this.connection.getAccountInfo(airQualityPDA),
-        this.connection.getAccountInfo(contractPDA)
-      ]);
+      // Get actual account info from blockchain (with error handling)
+      let airQualityInfo = null;
+      let contractInfo = null;
+      
+      try {
+        [airQualityInfo, contractInfo] = await Promise.all([
+          this.connection.getAccountInfo(airQualityPDA),
+          this.connection.getAccountInfo(contractPDA)
+        ]);
+      } catch (networkError) {
+        console.warn('⚠️ Cannot fetch account info due to network issues:', networkError.message);
+        return {
+          success: false,
+          error: `Network connectivity issue: ${networkError.message}`,
+          note: 'Unable to connect to Solana RPC endpoint'
+        };
+      }
 
       // For now, we can't parse the account data without the program
       // but we can still check if accounts exist
@@ -387,6 +550,9 @@ class RealBlockchainService {
       programId: this.programId.toString(),
       authority: this.keypair?.publicKey?.toString() || 'Not initialized',
       mode: 'REAL_BLOCKCHAIN',
+      programInitialized: !!this.program,
+      canSendTransactions: this.isInitialized && !!this.program,
+      rpcUrl: this.rpcUrl,
       lastActivity: new Date().toISOString()
     };
   }
