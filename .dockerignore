@@ -1,0 +1,23 @@
+# Ignore heavy/unneeded paths for builds to keep context tiny
+.git
+**/node_modules
+**/build
+**/dist
+**/.cache
+**/.next
+
+# Local data and OS files
+.DS_Store
+*.log
+
+# Large project modules not needed for no-db containers
+anchor_project/
+test-ledger/
+analytics/
+database/
+iot-simulation/
+docker/
+
+# Misc
+*.swp
+
