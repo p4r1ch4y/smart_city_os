@@ -11,7 +11,7 @@ target/
 backend/
 analytics/
 iot-simulation/
-blockchain/
+/blockchain/
 programs/
 anchor_project/
 smart-city-prototype/

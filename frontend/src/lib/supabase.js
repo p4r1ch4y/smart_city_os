@@ -102,9 +102,9 @@ export const supabaseHelpers = {
         default:
           startTime = new Date(now.getTime() - 24 * 60 * 60 * 1000);
       }
-      
+
       query = query.gte('timestamp', startTime.toISOString());
-      
+
       const { data, error } = await query;
       return { data, error };
     } catch (error) {
@@ -128,12 +128,12 @@ export const supabaseHelpers = {
   subscribeToSensorData(callback) {
     return supabase
       .channel('sensor_data_changes')
-      .on('postgres_changes', 
-        { 
-          event: '*', 
-          schema: 'public', 
-          table: TABLES.SENSOR_DATA 
-        }, 
+      .on('postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: TABLES.SENSOR_DATA
+        },
         callback
       )
       .subscribe();
@@ -142,12 +142,12 @@ export const supabaseHelpers = {
   subscribeToAlerts(callback) {
     return supabase
       .channel('alerts_changes')
-      .on('postgres_changes', 
-        { 
-          event: '*', 
-          schema: 'public', 
-          table: TABLES.ALERTS 
-        }, 
+      .on('postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: TABLES.ALERTS
+        },
         callback
       )
       .subscribe();
@@ -163,6 +163,35 @@ export const supabaseHelpers = {
       return { connected: !error, error };
     } catch (error) {
       return { connected: false, error };
+    }
+  }
+  ,
+
+  // User profile helpers
+  async getUserProfile(userId) {
+    try {
+      const { data, error } = await supabase
+        .from(TABLES.USERS)
+        .select('*')
+        .eq('id', userId)
+        .single();
+      return { data, error };
+    } catch (error) {
+      return { data: null, error };
+    }
+  },
+
+  async updateUserProfile(userId, updates) {
+    try {
+      const { data, error } = await supabase
+        .from(TABLES.USERS)
+        .update(updates)
+        .eq('id', userId)
+        .select()
+        .single();
+      return { data, error };
+    } catch (error) {
+      return { data: null, error };
     }
   }
 };
