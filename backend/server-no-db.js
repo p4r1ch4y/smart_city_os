@@ -129,11 +129,22 @@ if (emergencyServicesRoutes) {
     res.status(503).json({ success: false, error: 'Emergency services unavailable in this deployment' });
   });
 }
+// Analytics proxy to Hugging Face Space (optional)
+let analyticsProxy = null;
+try {
+  analyticsProxy = require('./routes/analyticsProxy');
+} catch (e) {
+  console.warn('Skipping analytics proxy due to import error:', e.message);
+}
+if (analyticsProxy) {
+  app.use('/api/analytics', analyticsProxy);
+}
+
 
 // Auth endpoints (mock)
 app.post('/api/auth/register', (req, res) => {
   const { username, email, password, firstName, lastName, role } = req.body;
-  
+
   // Check if user exists
   const existingUser = users.find(u => u.email === email || u.username === username);
   if (existingUser) {
@@ -167,9 +178,9 @@ app.post('/api/auth/register', (req, res) => {
 
 app.post('/api/auth/login', (req, res) => {
   const { email, password } = req.body;
-  
+
   let user = users.find(u => u.email === email);
-  
+
   // Create a default admin user if no users exist
   if (!user && users.length === 0) {
     user = {
@@ -240,7 +251,7 @@ app.post('/api/sensors', (req, res) => {
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
-  
+
   sensors.push(sensor);
   res.status(201).json({ sensor });
 });
@@ -251,16 +262,16 @@ app.post('/api/sensors/data', (req, res) => {
     ...req.body,
     timestamp: new Date().toISOString()
   };
-  
+
   sensorData.push(data);
-  
+
   // Emit real-time data via WebSocket
   io.emit('sensor-data', data);
-  
+
   // Check for alerts (simple threshold check)
   const alertsGenerated = checkForAlerts(data);
-  
-  res.status(201).json({ 
+
+  res.status(201).json({
     message: 'Data received successfully',
     data: data,
     alerts: alertsGenerated.length
@@ -284,7 +295,7 @@ app.get('/api/alerts/stats', (req, res) => {
     low: alerts.filter(a => a.severity === 'low').length,
     active: alerts.filter(a => a.status === 'active').length
   };
-  
+
   res.json(stats);
 });
 
@@ -292,28 +303,28 @@ app.get('/api/alerts/stats', (req, res) => {
 const checkForAlerts = (sensorData) => {
   const alertsGenerated = [];
   const data = sensorData.data;
-  
+
   // Traffic alerts
   if (data.congestion_level && data.congestion_level > 80) {
-    const alert = createAlert(sensorData.sensorId, 'High Traffic Congestion', 'critical', 
+    const alert = createAlert(sensorData.sensorId, 'High Traffic Congestion', 'critical',
       `Congestion level at ${data.congestion_level}%`);
     alertsGenerated.push(alert);
   }
-  
+
   // Air quality alerts
   if (data.aqi && data.aqi > 150) {
-    const alert = createAlert(sensorData.sensorId, 'Poor Air Quality', 'high', 
+    const alert = createAlert(sensorData.sensorId, 'Poor Air Quality', 'high',
       `AQI level at ${data.aqi}`);
     alertsGenerated.push(alert);
   }
-  
+
   // Waste alerts
   if (data.fill_percentage && data.fill_percentage > 90) {
-    const alert = createAlert(sensorData.sensorId, 'Waste Bin Full', 'medium', 
+    const alert = createAlert(sensorData.sensorId, 'Waste Bin Full', 'medium',
       `Fill level at ${data.fill_percentage}%`);
     alertsGenerated.push(alert);
   }
-  
+
   return alertsGenerated;
 };
 
@@ -327,10 +338,10 @@ const createAlert = (sensorId, title, severity, description) => {
     status: 'active',
     createdAt: new Date().toISOString()
   };
-  
+
   alerts.push(alert);
   io.emit('alert-created', alert);
-  
+
   return alert;
 };
 
