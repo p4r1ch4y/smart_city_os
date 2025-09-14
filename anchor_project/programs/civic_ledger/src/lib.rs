@@ -1,55 +1,33 @@
 use anchor_lang::prelude::*;
 
-// Module declarations
-pub mod air_quality;
-pub mod contract;
-pub mod errors;
-pub mod events;
-pub mod utils;
-
-// Re-exports for clean API
-pub use air_quality::*;
-pub use contract::*;
-pub use errors::*;
-pub use events::*;
-pub use utils::*;
-
 declare_id!("A8vwRav21fjK55vLQXxDZD8WFLP5cvFyYfBaEsTcy5An");
 
-/// Smart City OS - Civic Ledger Program
-///
-/// This program manages air quality sensors and civic contracts on the Solana blockchain
-/// with economic optimizations to minimize transaction costs while maintaining data integrity.
 #[program]
 pub mod civic_ledger {
     use super::*;
 
-    /// Initialize a new air quality sensor
-    ///
-    /// # Arguments
-    /// * `ctx` - The context containing accounts
-    /// * `location` - Sensor location (max 50 chars)
-    /// * `sensor_id` - Unique sensor identifier (max 30 chars)
     pub fn initialize_air_quality(
         ctx: Context<InitializeAirQuality>,
         location: String,
         sensor_id: String,
     ) -> Result<()> {
-        ctx.accounts.process(location, sensor_id)
+        let air_quality = &mut ctx.accounts.air_quality;
+        air_quality.location = location;
+        air_quality.sensor_id = sensor_id;
+        air_quality.authority = ctx.accounts.authority.key();
+        air_quality.created_at = Clock::get()?.unix_timestamp;
+        air_quality.updated_at = Clock::get()?.unix_timestamp;
+
+        emit!(AirQualityInitialized {
+            air_quality: air_quality.key(),
+            location: air_quality.location.clone(),
+            sensor_id: air_quality.sensor_id.clone(),
+            authority: air_quality.authority,
+        });
+
+        Ok(())
     }
 
-    /// Update air quality sensor data with economic optimization
-    ///
-    /// Only updates if the change is significant enough to justify the transaction cost
-    ///
-    /// # Arguments
-    /// * `ctx` - The context containing accounts
-    /// * `aqi` - Air Quality Index (0-500)
-    /// * `pm25` - PM2.5 concentration (0-1000 μg/m³)
-    /// * `pm10` - PM10 concentration (0-1000 μg/m³)
-    /// * `co2` - CO2 concentration (0-10000 ppm)
-    /// * `humidity` - Relative humidity (0-100%)
-    /// * `temperature` - Temperature (-50 to 100°C)
     pub fn update_air_quality(
         ctx: Context<UpdateAirQuality>,
         aqi: u16,
@@ -59,51 +37,82 @@ pub mod civic_ledger {
         humidity: f32,
         temperature: f32,
     ) -> Result<()> {
-        ctx.accounts.process(aqi, pm25, pm10, co2, humidity, temperature)
+        // Validate input ranges
+        require!(aqi <= 500, CustomError::InvalidAQIValue);
+        require!(pm25 >= 0.0 && pm25 <= 1000.0, CustomError::InvalidPM25Value);
+        require!(pm10 >= 0.0 && pm10 <= 1000.0, CustomError::InvalidPM10Value);
+        require!(co2 >= 0.0 && co2 <= 10000.0, CustomError::InvalidCO2Value);
+        require!(humidity >= 0.0 && humidity <= 100.0, CustomError::InvalidHumidityValue);
+        require!(temperature >= -50.0 && temperature <= 100.0, CustomError::InvalidTemperatureValue);
+
+        let air_quality = &mut ctx.accounts.air_quality;
+        air_quality.aqi = aqi;
+        air_quality.pm25 = pm25;
+        air_quality.pm10 = pm10;
+        air_quality.co2 = co2;
+        air_quality.humidity = humidity;
+        air_quality.temperature = temperature;
+        air_quality.updated_at = Clock::get()?.unix_timestamp;
+
+        emit!(AirQualityUpdated {
+            air_quality: air_quality.key(),
+            aqi,
+            pm25,
+            pm10,
+            co2,
+            humidity,
+            temperature,
+            timestamp: air_quality.updated_at,
+        });
+
+        Ok(())
     }
 
-    /// Batch update multiple air quality sensors (economic optimization)
-    ///
-    /// More cost-effective than individual updates when updating multiple sensors
-    ///
-    /// # Arguments
-    /// * `ctx` - The context containing multiple sensor accounts
-    /// * `sensor_data` - Vector of sensor data tuples (aqi, pm25, pm10, co2, humidity, temp)
-    pub fn batch_update_air_quality(
-        ctx: Context<BatchUpdateAirQuality>,
-        sensor_data: Vec<(u16, f32, f32, f32, f32, f32)>,
-    ) -> Result<()> {
-        ctx.accounts.process(sensor_data)
-    }
-
-    /// Initialize a new civic contract
-    ///
-    /// # Arguments
-    /// * `ctx` - The context containing accounts
-    /// * `name` - Contract name (max 50 chars)
-    /// * `description` - Contract description (max 200 chars)
-    /// * `contract_type` - Type of contract (max 30 chars)
     pub fn initialize_contract(
         ctx: Context<InitializeContract>,
         name: String,
         description: String,
         contract_type: String,
     ) -> Result<()> {
-        ctx.accounts.process(name, description, contract_type)
+        require!(name.len() <= 50, CustomError::NameTooLong);
+        require!(description.len() <= 200, CustomError::DescriptionTooLong);
+        require!(contract_type.len() <= 30, CustomError::ContractTypeTooLong);
+
+        let contract = &mut ctx.accounts.contract;
+        contract.name = name;
+        contract.description = description;
+        contract.contract_type = contract_type;
+        contract.authority = ctx.accounts.authority.key();
+        contract.is_active = true;
+        contract.created_at = Clock::get()?.unix_timestamp;
+        contract.updated_at = Clock::get()?.unix_timestamp;
+
+        emit!(ContractInitialized {
+            contract: contract.key(),
+            name: contract.name.clone(),
+            description: contract.description.clone(),
+            contract_type: contract.contract_type.clone(),
+            authority: contract.authority,
+        });
+
+        Ok(())
     }
 
-    /// Update contract status with economic optimization
-    ///
-    /// Only updates if the status actually changes
-    ///
-    /// # Arguments
-    /// * `ctx` - The context containing accounts
-    /// * `is_active` - New active status
     pub fn update_contract_status(
         ctx: Context<UpdateContract>,
         is_active: bool,
     ) -> Result<()> {
-        ctx.accounts.process_status_update(is_active)
+        let contract = &mut ctx.accounts.contract;
+        contract.is_active = is_active;
+        contract.updated_at = Clock::get()?.unix_timestamp;
+
+        emit!(ContractStatusUpdated {
+            contract: contract.key(),
+            is_active,
+            timestamp: contract.updated_at,
+        });
+
+        Ok(())
     }
 
     /// Update contract details with economic optimization

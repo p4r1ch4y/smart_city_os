@@ -6,11 +6,14 @@ WORKDIR /app
 # Install system dependencies
 RUN apk add --no-cache curl
 
-# Copy package files
-COPY package*.json ./
+# Copy package files from root
+COPY package.json package-lock.json ./
 
 # Install dependencies
-RUN npm ci --only=production
+RUN npm install --only=production
+
+# Copy anchor project files (needed for IDL)
+COPY anchor_project/ ../anchor_project/
 
 # Copy backend source code
 COPY backend/ ./

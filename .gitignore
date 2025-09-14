@@ -304,4 +304,5 @@ anchor_project/trident-tests/
 test-ledger/
 target/
 .anchor/
-
+assist.txt
+.vercel

@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useQuery } from 'react-query';
+import { useNavigate } from 'react-router-dom';
 import { blockchainService, analyticsService } from '../services/api';
 import { Icon, StatusIcon } from '../components/icons';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 function Services() {
+  const navigate = useNavigate();
   const [selectedService, setSelectedService] = useState('blockchain');
   const [blockchainData, setBlockchainData] = useState(null);
 
@@ -54,6 +56,15 @@ function Services() {
   );
 
   const services = [
+    {
+      id: 'emergency',
+      name: 'Emergency Services',
+      icon: 'heart',
+      description: 'Book emergency services with secure payment processing',
+      status: 'active',
+      color: 'red',
+      link: '/services/emergency'
+    },
     {
       id: 'blockchain',
       name: 'Blockchain Transparency',
@@ -291,7 +302,13 @@ function Services() {
                 ? 'border-primary-500 shadow-lg'
                 : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
             }`}
-            onClick={() => setSelectedService(service.id)}
+            onClick={() => {
+              if (service.link) {
+                navigate(service.link);
+              } else {
+                setSelectedService(service.id);
+              }
+            }}
           >
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">

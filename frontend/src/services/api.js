@@ -157,4 +157,31 @@ export const apiUtils = {
   },
 };
 
+// Emergency Services API
+export const emergencyServicesAPI = {
+  // Get available service types
+  getServiceTypes: () => api.get('/emergency-services/types'),
+
+  // Calculate service fee
+  calculateFee: (data) => api.post('/emergency-services/calculate-fee', data),
+
+  // Book emergency service
+  bookService: (data) => api.post('/emergency-services/book', data),
+
+  // Get user bookings
+  getUserBookings: (params = {}) => api.get('/emergency-services/bookings', { params }),
+
+  // Get specific booking
+  getBooking: (id) => api.get(`/emergency-services/bookings/${id}`),
+
+  // Get payment status
+  getPaymentStatus: (sessionId) => api.get(`/emergency-services/payment/${sessionId}/status`),
+
+  // Admin endpoints
+  admin: {
+    getAllBookings: (params = {}) => api.get('/emergency-services/admin/bookings', { params }),
+    updateBookingStatus: (id, data) => api.patch(`/emergency-services/admin/bookings/${id}/status`, data)
+  }
+};
+
 export default api;

@@ -386,6 +386,7 @@ export const AuthProvider = ({ children }) => {
     user,
     session,
     loading,
+    isLoading: loading, // alias for components expecting isLoading
     isAuthenticated,
     login,
     register,
@@ -394,6 +395,7 @@ export const AuthProvider = ({ children }) => {
     resetPassword,
     hasRole,
     hasAnyRole,
+    useStackAuth: (process.env.REACT_APP_USE_STACK_AUTH === 'true'),
     supabase // Expose supabase client for direct access if needed
   };
 
