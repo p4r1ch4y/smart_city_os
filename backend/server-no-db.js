@@ -85,10 +85,15 @@ if (process.env.SKIP_BLOCKCHAIN_ROUTES !== 'true') {
     console.warn('Skipping blockchain routes due to import error:', e.message);
   }
 }
-const emergencyServicesRoutes = require('./routes/emergencyServices');
+let emergencyServicesRoutes = null;
+try {
+  emergencyServicesRoutes = require('./routes/emergencyServices');
+} catch (e) {
+  console.warn('Skipping emergency services routes due to import error:', e.message);
+}
 
-// Health check endpoint
-app.get('/health', (req, res) => {
+// Health check endpoint (aliases for serverless routing)
+const healthHandler = (req, res) => {
   res.json({
     status: 'OK',
     timestamp: new Date().toISOString(),
@@ -96,6 +101,14 @@ app.get('/health', (req, res) => {
     message: 'Smart City OS Backend is running (No Database Mode)',
     sensors: sensors.length,
     alerts: alerts.length
+  });
+};
+app.get('/health', healthHandler);
+app.get('/api/health', healthHandler);
+app.get('/api', (req, res) => {
+  res.json({
+    ok: true,
+    routes: ['/api/health', '/api/emergency-services', '/api/blockchain/status'],
   });
 });
 
@@ -109,7 +122,13 @@ if (blockchainRoutes) {
 }
 
 // Mount emergency services routes
-app.use('/api/emergency-services', emergencyServicesRoutes);
+if (emergencyServicesRoutes) {
+  app.use('/api/emergency-services', emergencyServicesRoutes);
+} else {
+  app.all('/api/emergency-services/*', (req, res) => {
+    res.status(503).json({ success: false, error: 'Emergency services unavailable in this deployment' });
+  });
+}
 
 // Auth endpoints (mock)
 app.post('/api/auth/register', (req, res) => {
