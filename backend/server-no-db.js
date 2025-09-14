@@ -8,16 +8,22 @@ const socketIo = require('socket.io');
 console.log('🚀 Starting Smart City OS Backend (No Database Mode)...');
 
 const app = express();
-const server = http.createServer(app);
-const allowedOrigins = (process.env.CORS_ALLOWED_ORIGIN || 'http://localhost:3000')
-  .split(',')
-  .map(o => o.trim());
-const io = socketIo(server, {
-  cors: {
-    origin: allowedOrigins,
-    methods: ["GET", "POST"]
-  }
-});
+const IS_SERVERLESS = !!process.env.VERCEL || process.env.SERVERLESS === '1' || !!process.env.NOW_REGION;
+let server = null;
+let io = { emit: () => {} };
+
+if (!IS_SERVERLESS) {
+  server = http.createServer(app);
+  const allowedOrigins = (process.env.CORS_ALLOWED_ORIGIN || 'http://localhost:3000')
+    .split(',')
+    .map(o => o.trim());
+  io = socketIo(server, {
+    cors: {
+      origin: allowedOrigins,
+      methods: ["GET", "POST"]
+    }
+  });
+}
 
 const PORT = process.env.PORT || 3000;
 
@@ -310,18 +316,20 @@ const createAlert = (sensorId, title, severity, description) => {
 };
 
 // WebSocket connection handling
-io.on('connection', (socket) => {
-  console.log(`📡 Client connected: ${socket.id}`);
-  
-  socket.on('join-room', (room) => {
-    socket.join(room);
-    console.log(`Client ${socket.id} joined room: ${room}`);
+if (io && typeof io.on === 'function') {
+  io.on('connection', (socket) => {
+    console.log(`📡 Client connected: ${socket.id}`);
+
+    socket.on('join-room', (room) => {
+      socket.join(room);
+      console.log(`Client ${socket.id} joined room: ${room}`);
+    });
+
+    socket.on('disconnect', () => {
+      console.log(`📡 Client disconnected: ${socket.id}`);
+    });
   });
-  
-  socket.on('disconnect', () => {
-    console.log(`📡 Client disconnected: ${socket.id}`);
-  });
-});
+}
 
 // Error handling
 app.use((err, req, res, next) => {
@@ -345,6 +353,9 @@ initializeMockData();
 
 // Start server only when run directly (not when imported by serverless runtime)
 if (require.main === module) {
+  if (!server) {
+    server = http.createServer(app);
+  }
   server.listen(PORT, () => {
     console.log(`✅ Smart City OS Server running on port ${PORT}`);
     console.log(`🌐 Health check: http://localhost:${PORT}/health`);
@@ -356,18 +367,26 @@ if (require.main === module) {
 // Graceful shutdown
 process.on('SIGTERM', () => {
   console.log('🛑 SIGTERM received, shutting down gracefully');
-  server.close(() => {
-    console.log('✅ Server closed');
+  if (server) {
+    server.close(() => {
+      console.log('✅ Server closed');
+      process.exit(0);
+    });
+  } else {
     process.exit(0);
-  });
+  }
 });
 
 process.on('SIGINT', () => {
   console.log('🛑 SIGINT received, shutting down gracefully');
-  server.close(() => {
-    console.log('✅ Server closed');
+  if (server) {
+    server.close(() => {
+      console.log('✅ Server closed');
+      process.exit(0);
+    });
+  } else {
     process.exit(0);
-  });
+  }
 });
 
 module.exports = app;
