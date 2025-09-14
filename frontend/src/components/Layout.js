@@ -5,13 +5,30 @@ import Header from './Header';
 import { useSocket } from '../contexts/SocketContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { getLatestAnnouncement, syncAnnouncementsFromRemote } from '../lib/announcements';
+
 
 function Layout() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [showAnnouncementPeek, setShowAnnouncementPeek] = useState(true);
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { isConnected } = useSocket();
   const { isDark } = useTheme();
+  const [, forceRerender] = useState(0);
+
 
   // Apply theme to document
+  // Sync announcements from Supabase once on mount to populate the floating peek
+  useEffect(() => {
+    (async () => {
+      const ok = await syncAnnouncementsFromRemote();
+      if (ok) forceRerender((t) => t + 1);
+    })();
+  }, []);
+
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
   }, [isDark]);
@@ -19,7 +36,7 @@ function Layout() {
   // Close sidebar on route change (mobile)
   useEffect(() => {
     setSidebarOpen(false);
-  }, [window.location.pathname]);
+  }, [location.pathname]);
 
   return (
     <div className="layout-container">
@@ -93,6 +110,32 @@ function Layout() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Floating Notice Peek */}
+      {showAnnouncementPeek && getLatestAnnouncement() && (
+        <div className="fixed top-20 right-4 z-40">
+          <div className="backdrop-blur bg-white/60 dark:bg-gray-800/60 border border-blue-200/60 dark:border-blue-800/60 text-blue-900 dark:text-blue-200 rounded-lg shadow-lg max-w-sm">
+            <button
+              className="absolute -top-2 -right-2 bg-white/80 dark:bg-gray-900/80 text-gray-600 dark:text-gray-300 rounded-full w-6 h-6 text-xs"
+              aria-label="Dismiss"
+              onClick={() => setShowAnnouncementPeek(false)}
+            >
+              ×
+            </button>
+            <button
+              onClick={() => navigate('/announcements')}
+              className="w-full text-left p-4"
+              title="Open City Notices"
+            >
+              <p className="text-xs font-semibold text-blue-700 dark:text-blue-300">City Notice</p>
+              <p className="text-sm line-clamp-2 text-gray-800 dark:text-gray-200">
+                {getLatestAnnouncement().title}: {getLatestAnnouncement().content}
+              </p>
+              <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">Read more →</p>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

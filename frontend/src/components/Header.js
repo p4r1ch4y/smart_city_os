@@ -14,17 +14,21 @@ import {
   ArrowRightOnRectangleIcon,
   ChevronDownIcon
 } from '@heroicons/react/24/outline';
+import { useNavigate } from 'react-router-dom';
+
 
 function Header({ onMenuClick }) {
   const { user, logout } = useAuth();
   const { isConnected, getActiveAlerts } = useSocket();
+  const navigate = useNavigate();
+
   const { isDark, toggleTheme } = useTheme();
   const { cityKey, cities } = useCity();
-  
+
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
-  
+
   const notificationRef = useRef(null);
   const profileRef = useRef(null);
 
@@ -91,7 +95,7 @@ function Header({ onMenuClick }) {
               {currentCity.population} residents
             </p>
           </div>
-          
+
           {/* Connection Status Indicator */}
           <div className="flex items-center space-x-2">
             <div className={`w-2 h-2 rounded-full ${
@@ -123,6 +127,15 @@ function Header({ onMenuClick }) {
             <MoonIcon className="h-5 w-5" />
           )}
         </button>
+        {/* Emergency Quick Button */}
+        <button
+          onClick={() => navigate('/services/emergency/quick?service=ambulance')}
+          className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold shadow focus:outline-none focus:ring-2 focus:ring-red-500"
+          title="Quick Book Emergency Service"
+        >
+          <span>Emergency</span>
+        </button>
+
 
         {/* Notifications */}
         <div className="relative" ref={notificationRef}>
@@ -133,6 +146,8 @@ function Header({ onMenuClick }) {
           >
             <BellIcon className="h-5 w-5" />
             {criticalAlerts > 0 && (
+
+
               <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
                 {criticalAlerts > 9 ? '9+' : criticalAlerts}
               </span>
@@ -220,7 +235,7 @@ function Header({ onMenuClick }) {
                     {user?.email}
                   </p>
                   <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                    {user?.user_metadata?.role || 'Citizen'}
+                    {user?.role || user?.user_metadata?.role || 'Citizen'}
                   </p>
                 </div>
                 <div className="py-1">

@@ -6,10 +6,14 @@ import MetricCard from './MetricCard';
 import RealtimeChart from './RealtimeChart';
 import AlertsList from './AlertsList';
 import SensorMap from './SensorMap';
+import { useNavigate } from 'react-router-dom';
+import { getLatestAnnouncement } from '../lib/announcements';
 import './Dashboard.css';
 
 function PrototypeDashboard() {
   const { realtimeData, isConnected, getActiveAlerts } = useSocket();
+  const navigate = useNavigate();
+
   const [dashboardData, setDashboardData] = useState({
     traffic: { current: 67, trend: "positive", trendValue: "+2.3%" },
     energy: { current: 3.8, unit: "MW", trend: "negative", trendValue: "-1.2%" },
@@ -47,7 +51,7 @@ function PrototypeDashboard() {
   useEffect(() => {
     if (realtimeData && realtimeData.length > 0) {
       const latestData = realtimeData[realtimeData.length - 1];
-      
+
       setDashboardData(prev => ({
         ...prev,
         traffic: {
@@ -82,9 +86,31 @@ function PrototypeDashboard() {
     }
     return num.toLocaleString();
   };
+      {/* City Notice Peek */}
+      {getLatestAnnouncement() && (
+        <div className="mb-6 p-4 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20">
+          <a href="/announcements" className="block">
+            <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">City Notice</p>
+            <p className="text-gray-800 dark:text-gray-200 line-clamp-2">{getLatestAnnouncement().title}: {getLatestAnnouncement().content}</p>
+            <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">Read more →</p>
+          </a>
+        </div>
+      )}
+
 
   return (
     <div className="dashboard-section">
+      {/* City Notice Peek */}
+      {getLatestAnnouncement() && (
+        <div className="mb-6 p-4 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20">
+          <a href="/announcements" className="block">
+            <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">City Notice</p>
+            <p className="text-gray-800 dark:text-gray-200 line-clamp-2">{getLatestAnnouncement().title}: {getLatestAnnouncement().content}</p>
+            <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">Read more →</p>
+          </a>
+        </div>
+      )}
+
       {/* Real-time Metrics Cards */}
       <div className="metrics-grid">
         <MetricCard
@@ -153,19 +179,19 @@ function PrototypeDashboard() {
         <div className="chart-container">
           <h3>Traffic Flow Trends</h3>
           <div className="chart-wrapper">
-            <RealtimeChart 
-              data={realtimeData} 
+            <RealtimeChart
+              data={realtimeData}
               dataKey="traffic"
               color="#FF6B35"
               height={300}
             />
           </div>
         </div>
-        
+
         <div className="map-container">
           <h3>City Sensor Map</h3>
           <div className="city-map">
-            <SensorMap 
+            <SensorMap
               sensors={sensorsData?.data?.sensors || []}
               height={300}
             />
@@ -176,11 +202,12 @@ function PrototypeDashboard() {
       {/* Alerts Panel */}
       <div className="alerts-panel">
         <h3>Recent Alerts</h3>
-        <AlertsList 
-          alerts={alertsData?.data?.alerts || getActiveAlerts()} 
+        <AlertsList
+          alerts={alertsData?.data?.alerts || getActiveAlerts()}
           maxItems={5}
           showActions={false}
         />
+
       </div>
     </div>
   );

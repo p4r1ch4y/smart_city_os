@@ -69,6 +69,7 @@ const initializeMockData = () => {
 
 // Import blockchain routes
 const blockchainRoutes = require('./routes/blockchain');
+const emergencyServicesRoutes = require('./routes/emergencyServices');
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -84,6 +85,9 @@ app.get('/health', (req, res) => {
 
 // Mount blockchain routes
 app.use('/api/blockchain', blockchainRoutes);
+
+// Mount emergency services routes
+app.use('/api/emergency-services', emergencyServicesRoutes);
 
 // Auth endpoints (mock)
 app.post('/api/auth/register', (req, res) => {

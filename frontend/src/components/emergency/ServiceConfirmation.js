@@ -38,27 +38,13 @@ function ServiceConfirmation({ booking, onBack }) {
 
   const handlePayNow = () => {
     if (booking?.paymentSession?.url) {
-      // Open Dodo Payments checkout in new window
-      const paymentWindow = window.open(
-        booking.paymentSession.url,
-        'dodo-payment',
-        'width=600,height=700,scrollbars=yes,resizable=yes'
-      );
-
-      // Listen for payment completion
-      const checkClosed = setInterval(() => {
-        if (paymentWindow.closed) {
-          clearInterval(checkClosed);
-          // Refresh payment status when window closes
-          setTimeout(() => {
-            window.location.reload();
-          }, 1000);
-        }
-      }, 1000);
+      // Redirect current tab to Dodo Payments checkout (test mode)
+      window.location.href = booking.paymentSession.url;
     } else {
       toast.error('Payment URL not available');
     }
   };
+
 
   const handleSimulatePayment = async () => {
     try {

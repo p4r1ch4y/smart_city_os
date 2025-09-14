@@ -17,12 +17,14 @@ import {
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: HomeIcon, section: 'dashboard' },
+  { name: 'City Services', href: '/services', icon: BuildingOfficeIcon, section: 'services' },
   { name: 'Analytics', href: '/analytics', icon: ChartBarIcon, section: 'analytics' },
+  { name: 'City Notices', href: '/announcements', icon: ExclamationTriangleIcon, section: 'announcements' },
+
   { name: 'IoT Sensors', href: '/sensors', icon: CpuChipIcon, section: 'sensors' },
   { name: 'Alerts', href: '/alerts', icon: ExclamationTriangleIcon, section: 'alerts' },
   { name: '3D City Twin', href: '/city-twin', icon: CubeIcon, section: 'city-twin' },
   { name: 'Blockchain', href: '/blockchain', icon: LinkIcon, section: 'blockchain' },
-  { name: 'City Services', href: '/services', icon: BuildingOfficeIcon, section: 'services' },
   { name: 'Settings', href: '/settings', icon: Cog6ToothIcon, section: 'settings' },
 ];
 
@@ -121,7 +123,7 @@ function Sidebar({ onClose }) {
                 {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                {user?.user_metadata?.role || 'Citizen'}
+                {user?.role || user?.user_metadata?.role || 'Citizen'}
               </p>
             </div>
           </div>

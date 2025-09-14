@@ -12,6 +12,9 @@ COPY package.json package-lock.json ./
 # Install dependencies
 RUN npm install --only=production
 
+# Copy anchor project files (needed for IDL)
+COPY anchor_project/ ../anchor_project/
+
 # Copy backend source code
 COPY backend/ ./
 

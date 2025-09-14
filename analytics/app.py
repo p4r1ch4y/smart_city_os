@@ -21,6 +21,10 @@ import joblib
 import warnings
 warnings.filterwarnings('ignore')
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 # Try to import advanced ML libraries
 try:
     from statsmodels.tsa.arima.model import ARIMA

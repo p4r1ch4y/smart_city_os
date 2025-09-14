@@ -11,6 +11,9 @@ RUN (npm ci --omit=dev --no-optional || npm install --omit=dev --no-optional)
 
 # Copy backend source
 COPY backend ./backend
+# Copy Anchor IDL required by realBlockchainService
+COPY anchor_project/target/idl ./anchor_project/target/idl
+
 
 # Environment
 ENV NODE_ENV=production

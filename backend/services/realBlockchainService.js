@@ -1,6 +1,5 @@
 const { Program, AnchorProvider, Wallet } = require('@coral-xyz/anchor');
-const { Connection, PublicKey, Keypair, SystemProgram, Transaction, TransactionInstruction, sendAndConfirmTransaction } = require('@solana/web3.js');
-const fs = require('fs');
+const { Connection, PublicKey, Keypair, SystemProgram, Transaction } = require('@solana/web3.js');
 const path = require('path');
 
 // Load the IDL for the civic_ledger program
@@ -161,70 +160,6 @@ class RealBlockchainService {
   }
 
   /**
-   * Create instruction data for initialize_air_quality
-   */
-  createInitializeAirQualityInstruction(location, sensorId) {
-    // Instruction discriminator for initialize_air_quality (first 8 bytes)
-    // This is calculated as the first 8 bytes of sha256("global:initialize_air_quality")
-    const discriminator = Buffer.from([0x8c, 0x97, 0x25, 0x8f, 0x4c, 0x24, 0x89, 0x3c]);
-
-    // Encode location string (4 bytes length + string bytes)
-    const locationBytes = Buffer.from(location, 'utf8');
-    const locationLength = Buffer.alloc(4);
-    locationLength.writeUInt32LE(locationBytes.length, 0);
-
-    // Encode sensor_id string (4 bytes length + string bytes)
-    const sensorIdBytes = Buffer.from(sensorId, 'utf8');
-    const sensorIdLength = Buffer.alloc(4);
-    sensorIdLength.writeUInt32LE(sensorIdBytes.length, 0);
-
-    // Combine all data
-    return Buffer.concat([
-      discriminator,
-      locationLength,
-      locationBytes,
-      sensorIdLength,
-      sensorIdBytes
-    ]);
-  }
-
-  /**
-   * Create instruction data for update_air_quality
-   */
-  createUpdateAirQualityInstruction(aqi, pm25, pm10, co2, humidity, temperature) {
-    // Instruction discriminator for update_air_quality
-    const discriminator = Buffer.from([0x2e, 0x3b, 0x1a, 0x5c, 0x7d, 0x8e, 0x9f, 0xa0]);
-
-    const data = Buffer.alloc(26); // 2 + 4*6 = 26 bytes for the data
-    let offset = 0;
-
-    // Write AQI (u16)
-    data.writeUInt16LE(aqi, offset);
-    offset += 2;
-
-    // Write PM2.5 (f32)
-    data.writeFloatLE(pm25, offset);
-    offset += 4;
-
-    // Write PM10 (f32)
-    data.writeFloatLE(pm10, offset);
-    offset += 4;
-
-    // Write CO2 (f32)
-    data.writeFloatLE(co2, offset);
-    offset += 4;
-
-    // Write Humidity (f32)
-    data.writeFloatLE(humidity, offset);
-    offset += 4;
-
-    // Write Temperature (f32)
-    data.writeFloatLE(temperature, offset);
-
-    return Buffer.concat([discriminator, data]);
-  }
-
-  /**
    * Actually initialize air quality account on Solana blockchain
    */
   async initializeAirQualityAccount(location, sensorId, sensorData) {
@@ -255,7 +190,6 @@ class RealBlockchainService {
         };
       }
 
-<<<<<<< Updated upstream
       // Try to send real initialization transaction if program is available
       if (this.program) {
         try {
@@ -297,58 +231,15 @@ class RealBlockchainService {
       console.log(`✅ MOCK: Air quality account initialization prepared!`);
       console.log(`📝 Mock Transaction: ${mockTxSignature}`);
       console.log(`🔗 Explorer: https://explorer.solana.com/address/${airQualityPDA.toString()}?cluster=devnet`);
-=======
-      // Create the instruction data
-      const instructionData = this.createInitializeAirQualityInstruction(location, sensorId);
-
-      // Create the instruction
-      const instruction = new TransactionInstruction({
-        keys: [
-          { pubkey: airQualityPDA, isSigner: false, isWritable: true },
-          { pubkey: this.keypair.publicKey, isSigner: true, isWritable: true },
-          { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
-        ],
-        programId: this.programId,
-        data: instructionData,
-      });
-
-      // Create and simulate transaction (for demo purposes)
-      const transaction = new Transaction().add(instruction);
-      transaction.feePayer = this.keypair.publicKey;
-
-      // For demo purposes, simulate the transaction instead of executing
-      // This avoids instruction discriminator mismatch issues
-      const simulationResult = await this.connection.simulateTransaction(transaction);
-
-      if (simulationResult.value.err) {
-        throw new Error(`Simulation failed: ${JSON.stringify(simulationResult.value.err)}`);
-      }
-
-      // Generate a mock signature for demo purposes
-      const signature = `demo_init_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
-      console.log(`✅ REAL: Air quality account initialization simulated successfully!`);
-      console.log(`📝 Demo Transaction: ${signature}`);
-      console.log(`🔗 Program: https://explorer.solana.com/address/${this.programId.toString()}?cluster=devnet`);
->>>>>>> Stashed changes
 
       return {
         success: true,
         pda: airQualityPDA.toString(),
-<<<<<<< Updated upstream
         signature: mockTxSignature,
         message: 'Air quality account initialization prepared (mock mode)',
         location,
         sensorId,
         note: 'Using mock mode - program may need deployment or account funding'
-=======
-        signature,
-        message: 'Air quality account initialization simulated successfully',
-        location,
-        sensorId,
-        explorerUrl: `https://explorer.solana.com/address/${this.programId.toString()}?cluster=devnet`,
-        note: 'Transaction simulated for demo purposes'
->>>>>>> Stashed changes
       };
 
     } catch (error) {
@@ -381,25 +272,13 @@ class RealBlockchainService {
         };
       }
 
-      // Check if account exists
-      const accountInfo = await this.connection.getAccountInfo(airQualityPDA);
-      if (!accountInfo) {
-        return {
-          success: false,
-          error: 'Air quality account not found. Please initialize first.',
-          pda: airQualityPDA.toString()
-        };
-      }
-
-      console.log('📊 Air quality data for blockchain update:');
+      // For now, we'll use the simple updateAirQuality method
+      // Skip the problematic batch update with tuple types
+      console.log('📊 Air quality data prepared for blockchain update');
       console.log(`   AQI: ${sensorData.aqi}`);
       console.log(`   PM2.5: ${sensorData.pm25}`);
       console.log(`   PM10: ${sensorData.pm10}`);
-      console.log(`   CO2: ${sensorData.co2}`);
-      console.log(`   Humidity: ${sensorData.humidity}`);
-      console.log(`   Temperature: ${sensorData.temperature}`);
 
-<<<<<<< Updated upstream
       // Check if air quality account exists, initialize if needed
       let accountInfo = null;
       try {
@@ -494,66 +373,17 @@ class RealBlockchainService {
 
       console.log(`✅ MOCK: Air quality update prepared (fallback mode)`);
       console.log(`📝 Mock Transaction: ${mockTxSignature}`);
-=======
-      // Create the instruction data
-      const instructionData = this.createUpdateAirQualityInstruction(
-        sensorData.aqi,
-        sensorData.pm25,
-        sensorData.pm10,
-        sensorData.co2,
-        sensorData.humidity,
-        sensorData.temperature
-      );
-
-      // Create the instruction
-      const instruction = new TransactionInstruction({
-        keys: [
-          { pubkey: airQualityPDA, isSigner: false, isWritable: true },
-          { pubkey: this.keypair.publicKey, isSigner: true, isWritable: false },
-        ],
-        programId: this.programId,
-        data: instructionData,
-      });
-
-      // Create and simulate transaction (for demo purposes)
-      const transaction = new Transaction().add(instruction);
-      transaction.feePayer = this.keypair.publicKey;
-
-      // For demo purposes, simulate the transaction instead of executing
-      const simulationResult = await this.connection.simulateTransaction(transaction);
-
-      if (simulationResult.value.err) {
-        console.log('⚠️ Simulation failed, but continuing for demo purposes');
-      }
-
-      // Generate a mock signature for demo purposes
-      const signature = `demo_update_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
-      console.log(`✅ REAL: Air quality update simulated successfully!`);
-      console.log(`📝 Demo Transaction: ${signature}`);
-      console.log(`🔗 Program: https://explorer.solana.com/address/${this.programId.toString()}?cluster=devnet`);
->>>>>>> Stashed changes
 
       return {
         success: true,
         pda: airQualityPDA.toString(),
-<<<<<<< Updated upstream
         signature: mockTxSignature,
         message: 'Air quality data prepared for blockchain (mock mode)',
-=======
-        signature,
-        message: 'Air quality data update simulated successfully',
->>>>>>> Stashed changes
         location,
         sensorId,
         data: sensorData,
         timestamp: new Date().toISOString(),
-<<<<<<< Updated upstream
         note: 'Using mock mode - program may need deployment or account funding'
-=======
-        explorerUrl: `https://explorer.solana.com/address/${this.programId.toString()}?cluster=devnet`,
-        note: 'Transaction simulated for demo purposes'
->>>>>>> Stashed changes
       };
 
     } catch (error) {

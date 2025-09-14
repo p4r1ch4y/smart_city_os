@@ -17,10 +17,15 @@ const Sensors = lazy(() => import('./pages/Sensors'));
 const Alerts = lazy(() => import('./pages/Alerts'));
 const Analytics = lazy(() => import('./pages/Analytics'));
 const Services = lazy(() => import('./pages/Services'));
+const EmergencyServices = lazy(() => import('./pages/EmergencyServices'));
 const Settings = lazy(() => import('./pages/Settings'));
 const Profile = lazy(() => import('./pages/Profile'));
 const Blockchain = lazy(() => import('./pages/Blockchain'));
 const CityTwin = lazy(() => import('./pages/CityTwin'));
+const Announcements = lazy(() => import('./pages/Announcements'));
+const ComposeAnnouncement = lazy(() => import('./pages/ComposeAnnouncement'));
+const EmergencyPaymentStatus = lazy(() => import('./pages/EmergencyPaymentStatus'));
+const QuickEmergencyBook = lazy(() => import('./pages/QuickEmergencyBook'));
 
 function App() {
   return (
@@ -36,7 +41,7 @@ function App() {
                 {/* Public routes */}
                 <Route path="/" element={<Landing />} />
                 <Route path="/login" element={<Login />} />
-                
+
                 {/* Protected routes */}
                 <Route element={
                   <ProtectedRoute>
@@ -48,12 +53,20 @@ function App() {
                   <Route path="/alerts" element={<Alerts />} />
                   <Route path="/analytics" element={<Analytics />} />
                   <Route path="/services" element={<Services />} />
+                  <Route path="/services/emergency" element={<EmergencyServices />} />
+                      <Route path="/services/emergency/quick" element={<QuickEmergencyBook />} />
+
+                      <Route path="/services/emergency/success" element={<EmergencyPaymentStatus type="success" />} />
+                      <Route path="/services/emergency/cancel" element={<EmergencyPaymentStatus type="cancel" />} />
+
+                  <Route path="/announcements" element={<Announcements />} />
+                  <Route path="/announcements/new" element={<ProtectedRoute requiredRole="admin"><ComposeAnnouncement /></ProtectedRoute>} />
                   <Route path="/blockchain" element={<Blockchain />} />
                   <Route path="/city-twin" element={<CityTwin />} />
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/profile" element={<Profile />} />
                 </Route>
-                
+
                 {/* Catch all route */}
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
