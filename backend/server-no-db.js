@@ -9,9 +9,12 @@ console.log('🚀 Starting Smart City OS Backend (No Database Mode)...');
 
 const app = express();
 const server = http.createServer(app);
+const allowedOrigins = (process.env.CORS_ALLOWED_ORIGIN || 'http://localhost:3000')
+  .split(',')
+  .map(o => o.trim());
 const io = socketIo(server, {
   cors: {
-    origin: ["http://localhost:3001", "http://localhost:3000"],
+    origin: allowedOrigins,
     methods: ["GET", "POST"]
   }
 });
@@ -67,8 +70,15 @@ const initializeMockData = () => {
   console.log(`✅ Initialized ${sensors.length} mock sensors`);
 };
 
-// Import blockchain routes
-const blockchainRoutes = require('./routes/blockchain');
+// Import routes (optionally skip blockchain to avoid heavy deps)
+let blockchainRoutes = null;
+if (process.env.SKIP_BLOCKCHAIN_ROUTES !== 'true') {
+  try {
+    blockchainRoutes = require('./routes/blockchain');
+  } catch (e) {
+    console.warn('Skipping blockchain routes due to import error:', e.message);
+  }
+}
 const emergencyServicesRoutes = require('./routes/emergencyServices');
 
 // Health check endpoint
@@ -84,7 +94,13 @@ app.get('/health', (req, res) => {
 });
 
 // Mount blockchain routes
-app.use('/api/blockchain', blockchainRoutes);
+if (blockchainRoutes) {
+  app.use('/api/blockchain', blockchainRoutes);
+} else {
+  app.get('/api/blockchain/status', (req, res) => {
+    res.json({ success: true, data: { initialized: false, message: 'Blockchain routes skipped' } });
+  });
+}
 
 // Mount emergency services routes
 app.use('/api/emergency-services', emergencyServicesRoutes);
@@ -327,13 +343,15 @@ app.use('*', (req, res) => {
 // Initialize mock data
 initializeMockData();
 
-// Start server
-server.listen(PORT, () => {
-  console.log(`✅ Smart City OS Server running on port ${PORT}`);
-  console.log(`🌐 Health check: http://localhost:${PORT}/health`);
-  console.log(`📡 WebSocket server ready`);
-  console.log(`📊 Mock data: ${sensors.length} sensors initialized`);
-});
+// Start server only when run directly (not when imported by serverless runtime)
+if (require.main === module) {
+  server.listen(PORT, () => {
+    console.log(`✅ Smart City OS Server running on port ${PORT}`);
+    console.log(`🌐 Health check: http://localhost:${PORT}/health`);
+    console.log(`📡 WebSocket server ready`);
+    console.log(`📊 Mock data: ${sensors.length} sensors initialized`);
+  });
+}
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
