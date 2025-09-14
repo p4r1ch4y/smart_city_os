@@ -9,9 +9,12 @@ console.log('🚀 Starting Smart City OS Backend (No Database Mode)...');
 
 const app = express();
 const server = http.createServer(app);
+const allowedOrigins = (process.env.CORS_ALLOWED_ORIGIN || 'http://localhost:3000')
+  .split(',')
+  .map(o => o.trim());
 const io = socketIo(server, {
   cors: {
-    origin: ["http://localhost:3001", "http://localhost:3000"],
+    origin: allowedOrigins,
     methods: ["GET", "POST"]
   }
 });
