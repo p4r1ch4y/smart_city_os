@@ -18,6 +18,7 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
 import joblib
+import tempfile
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -55,7 +56,7 @@ class PredictiveAnalytics:
     def __init__(self):
         self.models = {}
         self.scalers = {}
-        self.model_dir = 'models'
+        self.model_dir = os.environ.get('MODEL_DIR') or os.path.join(tempfile.gettempdir(), 'models')
         os.makedirs(self.model_dir, exist_ok=True)
 
     def prepare_time_series_data(self, data, sequence_length=24):
