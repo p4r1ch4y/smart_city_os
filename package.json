@@ -14,7 +14,7 @@
     "analytics": "cd analytics && python app.py",
     "test": "node test-setup.js",
     "test:full": "node test-full-system.js",
-    "build": "cd frontend && npm run build",
+    "build": "sh -c 'if [ \"$BACKEND_ONLY\" = \"1\" ]; then echo Skipping frontend build for backend project; else cd frontend && npm run build; fi'",
     "docker:build": "docker-compose build",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
