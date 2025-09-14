@@ -1,0 +1,25 @@
+# Exclude local validator/ledger sockets and heavy dev artifacts to prevent ENXIO and timeouts
+# (Vercel only needs the frontend for this project)
+
+test-ledger/
+anchor_project/test-ledger/
+anchor_project/target/
+programs/**/target/
+target/
+
+# Exclude non-frontend services for this static build
+backend/
+analytics/
+iot-simulation/
+blockchain/
+programs/
+anchor_project/
+smart-city-prototype/
+
+# General
+node_modules/
+frontend/node_modules/
+frontend/build/
+*.log
+*.rpc
+
