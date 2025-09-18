@@ -1,4 +1,6 @@
 // Announcements store using backend API with localStorage fallback
+import { supabase } from './supabase';
+
 const STORAGE_KEY = 'smartcity_announcements_v1';
 const API_BASE = process.env.REACT_APP_API_URL || '/api';
 
@@ -46,9 +48,13 @@ export async function addAnnouncement({ title, content, imageUrl = '', videoUrl 
   localStorage.setItem(STORAGE_KEY, JSON.stringify([temp, ...all]));
 
   try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
+    if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`;
+
     const resp = await fetch(`${API_BASE}/notices`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      headers,
       body: JSON.stringify({ title, content, imageUrl, videoUrl, linkUrl, author })
     });
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);

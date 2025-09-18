@@ -7,14 +7,18 @@ function cors(res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 }
 
-function getClient(preferService = true) {
+function getClient(preferService = true, authBearer = null) {
   const url = process.env.SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const anonKey = process.env.SUPABASE_ANON_KEY;
   if (!url) return null;
   const key = preferService ? (serviceKey || anonKey) : (anonKey || serviceKey);
   if (!key) return null;
-  return createClient(url, key, { auth: { persistSession: false } });
+  const options = { auth: { persistSession: false } };
+  if (authBearer && (!serviceKey || !preferService)) {
+    options.global = { headers: { Authorization: `Bearer ${authBearer}` } };
+  }
+  return createClient(url, key, options);
 }
 
 function mapRow(r) {
@@ -47,27 +51,26 @@ module.exports = async (req, res) => {
     }
 
     if (req.method === 'POST') {
-      // Require service role for writes
-      const client = getClient(true);
-      if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-        return res.status(503).json({ ok: false, error: 'SUPABASE_SERVICE_ROLE_KEY missing for POST' });
-      }
-      if (!client) return res.status(503).json({ ok: false, error: 'SUPABASE_URL/KEY missing' });
-
       const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
       const { title, content, imageUrl = '', videoUrl = '', linkUrl = '', author = 'admin' } = body;
       if (!title || !content) {
         return res.status(400).json({ ok: false, error: 'title and content are required' });
       }
 
-      const insertPayload = {
-        title,
-        content,
-        image_url: imageUrl,
-        video_url: videoUrl,
-        link_url: linkUrl,
-        author,
-      };
+      // If service role is available, use it; otherwise, try RLS with user token
+      const authHeader = req.headers['authorization'] || req.headers['Authorization'];
+      const bearer = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+
+      let client;
+      if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        client = getClient(true);
+      } else if (bearer) {
+        client = getClient(false, bearer); // use anon key with user JWT to satisfy RLS
+      } else {
+        return res.status(503).json({ ok: false, error: 'No service role key configured and missing Authorization Bearer token' });
+      }
+
+      const insertPayload = { title, content, image_url: imageUrl, video_url: videoUrl, link_url: linkUrl, author };
 
       const { data, error } = await client
         .from('announcements')
