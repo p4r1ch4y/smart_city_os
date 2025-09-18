@@ -23,6 +23,7 @@ const Profile = lazy(() => import('./pages/Profile'));
 const Blockchain = lazy(() => import('./pages/Blockchain'));
 const CityTwin = lazy(() => import('./pages/CityTwin'));
 const Announcements = lazy(() => import('./pages/Announcements'));
+const AnnouncementDetail = lazy(() => import('./pages/AnnouncementDetail'));
 const ComposeAnnouncement = lazy(() => import('./pages/ComposeAnnouncement'));
 const EmergencyPaymentStatus = lazy(() => import('./pages/EmergencyPaymentStatus'));
 const QuickEmergencyBook = lazy(() => import('./pages/QuickEmergencyBook'));
@@ -60,6 +61,7 @@ function App() {
                       <Route path="/services/emergency/cancel" element={<EmergencyPaymentStatus type="cancel" />} />
 
                   <Route path="/announcements" element={<Announcements />} />
+                  <Route path="/announcements/:id" element={<AnnouncementDetail />} />
                   <Route path="/announcements/new" element={<ProtectedRoute requiredRole="admin"><ComposeAnnouncement /></ProtectedRoute>} />
                   <Route path="/blockchain" element={<Blockchain />} />
                   <Route path="/city-twin" element={<CityTwin />} />

@@ -28,11 +28,12 @@ function IndianGradientBG() {
   );
 }
 
-export default function Landing() { 
+export default function Landing() {
   const { city, cityKey, setCity, cities } = useCity();
   const { theme, toggleTheme } = useTheme();
   const [imageError, setImageError] = useState(false);
   const [useDefault, setUseDefault] = useState(false);
+  const [showDemo, setShowDemo] = useState(false);
 
   // Get city image path
   const getCityImagePath = () => {
@@ -182,6 +183,12 @@ export default function Landing() {
                 >
                   ✨ Explore Features
                 </a>
+                <button
+                  onClick={() => setShowDemo(true)}
+                  className="px-8 py-4 rounded-xl bg-white/10 border-2 border-white/40 text-white font-semibold hover:bg-white/15 transition-all duration-300 backdrop-blur-sm"
+                >
+                  🎥 View Demo
+                </button>
               </motion.div>
 
               {/* Indian Tech Stack badges */}
@@ -298,6 +305,28 @@ export default function Landing() {
           </motion.div>
         </div>
       </section>
+      {showDemo && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="relative w-full max-w-4xl aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl border border-white/20">
+            <iframe
+              title="Smart City OS Demo"
+              className="w-full h-full"
+              src="https://www.youtube.com/embed/I6vC8y8_Lfo"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+            />
+            <button
+              onClick={() => setShowDemo(false)}
+              className="absolute -top-4 -right-4 bg-white text-gray-900 rounded-full w-10 h-10 shadow-lg border border-gray-200"
+              aria-label="Close"
+            >
+              \u2715
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
