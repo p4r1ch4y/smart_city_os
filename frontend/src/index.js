@@ -58,7 +58,7 @@ root.render(
         pauseOnFocusLoss
         draggable
         pauseOnHover
-        theme="light"
+        theme="dark"
       />
     </QueryClientProvider>
   </React.StrictMode>
