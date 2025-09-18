@@ -1,4 +1,13 @@
 
+> Updated Quick Start (React frontend + serverless API)
+>
+> - Frontend: `cd frontend && cp .env.example .env.local && npm install && npm start`
+> - API locally (optional): at repo root run `vercel dev`, then set `REACT_APP_API_URL=http://localhost:3000/api` in `frontend/.env.local`
+> - Or point `REACT_APP_API_URL` to your deployed API base: `https://<your-app>.vercel.app/api`
+>
+> The legacy content below refers to a previous multi-service layout and can be ignored.
+
+
 # Smart City OS - Quick Start Guide
 
 This guide will help you get the Smart City OS up and running quickly.

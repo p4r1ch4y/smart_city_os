@@ -282,12 +282,9 @@ coverage/
 *.zst
 
 
-SCHOOL_OF_SOLANA_IMPLEMENTATION.md
-SENSORMAP_FIX_COMPLETE.md
-SUPABASE_SETUP.md
-supabase_setup.sql
-MIGRATION_COMPLETE.md
-IMPLEMENTATION_SUMMARY.md
+docs/archive/
+docs/
+tests/
 
 
 test-demo-auth.js

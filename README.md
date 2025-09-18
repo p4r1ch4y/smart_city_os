@@ -51,70 +51,57 @@ Solana is used for transparent logging of contract state and periodic, aggregate
 - **Smart Contracts**: Transparent data logging and verification
 - **Features**: Transaction queuing, integrity verification, audit trails
 
-## 🚀 Quick Start
+## 🚀 Quick Start (Frontend + Serverless API)
+
+This repository contains a React frontend in `frontend/` and serverless API routes in `api/` for notices. The simplest way to run locally is:
 
 ### Prerequisites
 - Node.js 18+
-- Python 3.8+
-- Supabase account (free tier available)
+- Vercel CLI (for local API): `npm i -g vercel` (optional but recommended)
+- Supabase project (for notices data)
 
-### Installation & Setup
-
-1. **Clone and Install**
+### 1) Frontend
 ```bash
 git clone <repository-url>
-cd smart-city-os
-
-# Install backend dependencies
-cd backend && npm install
-
-# Install frontend dependencies
-cd ../frontend && npm install
-
-# Install analytics dependencies
-cd ../analytics && pip install -r requirements.txt
+cd smart-city_os/frontend
+cp .env.example .env.local   # fill in your Supabase URL and anon key
+npm install
+npm start
 ```
+By default the UI runs at http://localhost:3000.
 
-2. **Supabase Setup**
+### 2) API (optional, for creating notices locally)
+Option A  use your deployed API base:
+- Set `REACT_APP_API_URL` in `frontend/.env.local` to your API base, e.g. `https://your-deployment.vercel.app/api`
+
+Option B  run serverless API locally with Vercel:
 ```bash
-# Create a new Supabase project at https://supabase.com
-# Run the SQL schema from database/supabase-schema.sql
-# Get your project URL and API keys
+# In a separate terminal at the repo root
+cd smart_city_os
+vercel dev
 ```
+Then set `REACT_APP_API_URL=http://localhost:3000/api` in `frontend/.env.local` and restart the frontend dev server.
 
-3. **Environment Configuration**
+Notes
+- Dark mode is enabled by default; toggle is stored in localStorage.
+- If you dont set `REACT_APP_API_URL`, the app will call relative `/api` which only works when the frontend and API are deployed together.
+
+More details: see CONTRIBUTING.md and ARCHITECTURE.md.
+
+
+### 3) Backend Local (optional)
+If you prefer running the legacy Node backend locally, you can start it in no‑DB fallback mode.
+
 ```bash
-# Frontend (.env)
-REACT_APP_SUPABASE_URL=https://your-project.supabase.co
-REACT_APP_SUPABASE_ANON_KEY=your-anon-key
-REACT_APP_THEME=indian
-
-# Backend (.env)
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-SUPABASE_ANON_KEY=your-anon-key
-PORT=3000
+# From the repo root
+cp backend/.env.example .env   # creates a root .env used by the backend
+node backend/server.js         # starts on http://localhost:3030
 ```
 
-4. **Start All Services**
-```bash
-# Terminal 1: Backend API
-cd backend && npm run dev
-
-# Terminal 2: Frontend
-cd frontend && npm start
-
-# Terminal 3: Analytics Service
-cd analytics && python app.py
-```
-
-5. **Access the Application**
-- **Frontend**: http://localhost:3001
-- **Backend API**: http://localhost:3000/api
-- **Analytics Service**: http://localhost:5000
-- **Health Check**: http://localhost:3000/health
-
-📖 **Detailed Setup Guide**: See [SUPABASE_SETUP.md](./SUPABASE_SETUP.md) for complete migration instructions.
+Notes
+- In development, the frontend (CRA) dev server proxies to http://localhost:3030 (see frontend/package.json `proxy`).
+- To run with a real Postgres instead of fallback, edit `.env` with your DB settings (or set `DATABASE_URL`) and set `FALLBACK_NO_DB=false`.
+- If you see DB connect errors, ensure your DB is reachable or keep `FALLBACK_NO_DB=true`.
 
 ## Project Structure
 
