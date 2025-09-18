@@ -1,34 +1,144 @@
-# Smart City OS
 
-A comprehensive Smart City Operating System with IoT integration, real-time monitoring, and predictive analytics.
+# Smart City OS - Complete Urban Management Platform
 
-## 🚧 Under Development
+A comprehensive, production-ready smart city management platform featuring AI-powered analytics, blockchain transparency, and real-time IoT monitoring.
 
-This project is currently under active development. The main implementation is being added via pull requests.
+## ⚡️ Economic Model Update
 
-## 🎯 Planned Features
+**Sensor Data Aggregation:**
+To ensure economic viability, individual sensor readings are now aggregated off-chain at regular intervals (e.g., hourly/daily). Only compiled summaries and essential contract metadata are pushed to the blockchain, dramatically reducing transaction costs and network congestion.
 
-- **Real-time IoT Sensor Monitoring**: Traffic, waste, air quality, noise, water, energy, and parking sensors
-- **Modern React Dashboard**: Beautiful, responsive UI with real-time data visualization
-- **Enterprise Backend**: Node.js/Express API with PostgreSQL and WebSocket support
-- **Predictive Analytics**: ML-powered insights and forecasting
-- **Blockchain Integration**: Transparent data logging with Solana
-- **Kubernetes Deployment**: Production-ready containerized deployment
+**Blockchain Usage:**
+Solana is used for transparent logging of contract state and periodic, aggregated sensor summaries. Raw sensor data is stored and analyzed off-chain for analytics and dashboard visualization.
 
-## 📋 Modules
+## 🌟 Features
 
-1. **User Management & Authentication** - JWT-based auth with role-based access control
-2. **IoT Sensor Data Simulation** - Realistic sensor data generation
-3. **Backend API & Real-time System** - Express.js API with WebSocket support
-4. **Predictive Analytics** - Machine learning models for city insights
-5. **Frontend Dashboard** - Modern React interface
-6. **Blockchain Integration** - Solana smart contracts for transparency
-7. **Deployment & DevOps** - Kubernetes, CI/CD, and monitoring
+### Core Platform
 
-## 🚀 Getting Started
+### Advanced Features
+- **Predictive Analytics** - LSTM/ARIMA models for traffic, energy, and environmental forecasting
+- **Blockchain Integration** - Solana-based transparent logging for data integrity
+- **Professional UI/UX** - Modern design system with Lucide React icons
+- **Error Handling** - Comprehensive error boundaries and fallback mechanisms
+- **Performance Optimization** - React Query caching and optimized rendering
 
-Check the pull requests for the latest implementation progress.
+## 🏗️ Architecture
 
-## 📄 License
+### Frontend (React 18)
+- **Framework**: React 18 with functional components and hooks
+- **Routing**: React Router v6 with protected routes
+- **State Management**: React Query + Context API
+- **Styling**: Custom CSS design system with CSS variables
+- **Icons**: Lucide React professional icon library
+- **Animations**: Framer Motion for smooth transitions
+- **Charts**: Recharts for data visualization
 
-MIT License - see LICENSE file for details.
+### Backend (Node.js)
+- **Framework**: Express.js with comprehensive middleware
+- **Database**: PostgreSQL with Sequelize ORM (fallback to in-memory)
+- **Real-time**: Socket.IO for WebSocket connections
+- **Authentication**: JWT with Stack Auth integration
+- **API**: RESTful design with comprehensive error handling
+
+### Analytics Service (Python)
+- **Framework**: Flask with CORS support
+- **ML Models**: Scikit-learn for LSTM/ARIMA predictions
+- **Data Processing**: NumPy and Pandas for time series analysis
+- **Deployment**: Gunicorn-ready for production
+
+### Blockchain Service (Solana)
+- **Network**: Solana Devnet integration
+- **Smart Contracts**: Transparent data logging and verification
+- **Features**: Transaction queuing, integrity verification, audit trails
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 18+
+- Python 3.8+
+- Supabase account (free tier available)
+
+### Installation & Setup
+
+1. **Clone and Install**
+```bash
+git clone <repository-url>
+cd smart-city-os
+
+# Install backend dependencies
+cd backend && npm install
+
+# Install frontend dependencies
+cd ../frontend && npm install
+
+# Install analytics dependencies
+cd ../analytics && pip install -r requirements.txt
+```
+
+2. **Supabase Setup**
+```bash
+# Create a new Supabase project at https://supabase.com
+# Run the SQL schema from database/supabase-schema.sql
+# Get your project URL and API keys
+```
+
+3. **Environment Configuration**
+```bash
+# Frontend (.env)
+REACT_APP_SUPABASE_URL=https://your-project.supabase.co
+REACT_APP_SUPABASE_ANON_KEY=your-anon-key
+REACT_APP_THEME=indian
+
+# Backend (.env)
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+SUPABASE_ANON_KEY=your-anon-key
+PORT=3000
+```
+
+4. **Start All Services**
+```bash
+# Terminal 1: Backend API
+cd backend && npm run dev
+
+# Terminal 2: Frontend
+cd frontend && npm start
+
+# Terminal 3: Analytics Service
+cd analytics && python app.py
+```
+
+5. **Access the Application**
+- **Frontend**: http://localhost:3001
+- **Backend API**: http://localhost:3000/api
+- **Analytics Service**: http://localhost:5000
+- **Health Check**: http://localhost:3000/health
+
+📖 **Detailed Setup Guide**: See [SUPABASE_SETUP.md](./SUPABASE_SETUP.md) for complete migration instructions.
+
+## Project Structure
+
+```
+smart-city-os/
+├── backend/                 # Express.js API server
+├── frontend/               # React dashboard
+├── iot-simulation/         # Python IoT data simulation
+├── analytics/              # Predictive analytics service
+├── blockchain/             # Solana smart contracts
+├── docker/                 # Docker configurations
+├── k8s/                    # Kubernetes manifests
+└── docs/                   # Documentation
+```
+
+## Technologies Used
+
+- **Backend**: Node.js, Express.js, PostgreSQL, Socket.IO
+- **Frontend**: React, Leaflet, Chart.js, WebSockets
+- **IoT Simulation**: Python, REST APIs
+- **Analytics**: Python, TensorFlow/PyTorch, LSTM, ARIMA
+- **Blockchain**: Solana, Web3.js
+- **DevOps**: Docker, Kubernetes, GitHub Actions
+
+## License
+
+MIT License

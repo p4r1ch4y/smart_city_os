@@ -1,0 +1,498 @@
+/* Dashboard Layout */
+.dashboard-section {
+  padding: 0;
+  max-width: none;
+}
+
+/* Metrics Grid */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--space-24);
+  margin-bottom: var(--space-32);
+}
+
+/* Metric Cards */
+.metric-card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-card-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-24);
+  position: relative;
+  overflow: hidden;
+  transition: all var(--duration-normal) var(--ease-standard);
+  cursor: pointer;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--color-primary);
+}
+
+.metric-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-primary-hover));
+}
+
+.metric-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-16);
+}
+
+.metric-header h3 {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  margin: 0;
+}
+
+.metric-icon {
+  font-size: 24px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-secondary);
+  border-radius: var(--radius-base);
+}
+
+.metric-value {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-4);
+  margin-bottom: var(--space-16);
+}
+
+.metric-value .value {
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  line-height: 1;
+}
+
+.metric-value .unit {
+  font-size: var(--font-size-lg);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Progress Bars */
+.metric-progress {
+  width: 100%;
+  height: 6px;
+  background-color: var(--color-secondary);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-bottom: var(--space-12);
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-primary-hover));
+  border-radius: var(--radius-full);
+  transition: width var(--duration-normal) var(--ease-standard);
+}
+
+/* Circular Progress */
+.circular-progress {
+  width: 80px;
+  height: 80px;
+  margin: var(--space-12) 0;
+}
+
+.circular-progress svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.circular-progress circle {
+  transition: stroke-dasharray var(--duration-normal) var(--ease-standard);
+}
+
+/* Metric Trends */
+.metric-trend {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  font-size: var(--font-size-sm);
+}
+
+.trend {
+  font-weight: var(--font-weight-semibold);
+  padding: var(--space-2) var(--space-6);
+  border-radius: var(--radius-sm);
+}
+
+.trend.positive {
+  color: var(--color-success);
+  background-color: rgba(var(--color-success-rgb), var(--status-bg-opacity));
+}
+
+.trend.negative {
+  color: var(--color-error);
+  background-color: rgba(var(--color-error-rgb), var(--status-bg-opacity));
+}
+
+.trend.neutral {
+  color: var(--color-info);
+  background-color: rgba(var(--color-info-rgb), var(--status-bg-opacity));
+}
+
+.metric-trend span:last-child {
+  color: var(--color-text-secondary);
+}
+
+/* Specific Metric Card Styles */
+.metric-card.traffic {
+  background: linear-gradient(135deg, var(--color-bg-6) 0%, var(--color-surface) 100%);
+}
+
+.metric-card.energy {
+  background: linear-gradient(135deg, var(--color-bg-8) 0%, var(--color-surface) 100%);
+}
+
+.metric-card.air-quality {
+  background: linear-gradient(135deg, var(--color-bg-2) 0%, var(--color-surface) 100%);
+}
+
+.metric-card.water {
+  background: linear-gradient(135deg, var(--color-bg-1) 0%, var(--color-surface) 100%);
+}
+
+.metric-card.waste {
+  background: linear-gradient(135deg, var(--color-bg-7) 0%, var(--color-surface) 100%);
+}
+
+.metric-card.population {
+  background: linear-gradient(135deg, var(--color-bg-5) 0%, var(--color-surface) 100%);
+}
+
+/* Air Quality Status */
+.air-quality-status {
+  display: inline-block;
+  padding: var(--space-4) var(--space-12);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--space-12);
+  background-color: var(--color-warning);
+  color: var(--color-btn-primary-text);
+}
+
+.air-quality-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.air-quality-details .detail {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+/* Water Indicator */
+.water-indicator {
+  width: 100%;
+  height: 40px;
+  background-color: var(--color-secondary);
+  border-radius: var(--radius-base);
+  position: relative;
+  overflow: hidden;
+  margin-bottom: var(--space-12);
+}
+
+.water-level {
+  height: 100%;
+  background: linear-gradient(90deg, #32CD32, #00CED1);
+  border-radius: var(--radius-base);
+  transition: width var(--duration-normal) var(--ease-standard);
+  position: relative;
+}
+
+.water-level::after {
+  content: '';
+  position: absolute;
+  right: var(--space-8);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z'/%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/* Waste Bins */
+.waste-bins {
+  display: flex;
+  gap: var(--space-8);
+  margin-bottom: var(--space-12);
+  justify-content: center;
+}
+
+.bin {
+  width: 20px;
+  height: 40px;
+  background-color: var(--color-secondary);
+  border-radius: var(--radius-sm);
+  position: relative;
+  overflow: hidden;
+}
+
+.bin-fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(180deg, #FF69B4, #FF1493);
+  border-radius: var(--radius-sm);
+  transition: height var(--duration-normal) var(--ease-standard);
+}
+
+/* Population Animation */
+.population-animation {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  margin: var(--space-12) auto;
+}
+
+.pulse-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius-full);
+  animation: pulse-ring 2s infinite;
+}
+
+.pulse-ring:nth-child(2) {
+  animation-delay: 0.5s;
+}
+
+.pulse-ring:nth-child(3) {
+  animation-delay: 1s;
+}
+
+@keyframes pulse-ring {
+  0% {
+    width: 20px;
+    height: 20px;
+    opacity: 1;
+  }
+  100% {
+    width: 60px;
+    height: 60px;
+    opacity: 0;
+  }
+}
+
+/* Dashboard Row */
+.dashboard-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-24);
+  margin-bottom: var(--space-32);
+}
+
+.chart-container,
+.map-container {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-card-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-24);
+}
+
+.chart-container h3,
+.map-container h3 {
+  margin: 0 0 var(--space-20) 0;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+}
+
+.chart-wrapper {
+  position: relative;
+  height: 300px;
+}
+
+/* City Map */
+.city-map {
+  position: relative;
+  height: 300px;
+  background: linear-gradient(135deg, var(--color-bg-3), var(--color-bg-1));
+  border-radius: var(--radius-base);
+  overflow: hidden;
+}
+
+.sensor-marker {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  cursor: pointer;
+}
+
+.marker-pulse {
+  width: 100%;
+  height: 100%;
+  background-color: var(--color-primary);
+  border-radius: var(--radius-full);
+  animation: marker-pulse 2s infinite;
+}
+
+.sensor-marker.warning .marker-pulse {
+  background-color: var(--color-warning);
+}
+
+.marker-label {
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  padding: var(--space-4) var(--space-8);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity var(--duration-normal) var(--ease-standard);
+  pointer-events: none;
+  box-shadow: var(--shadow-sm);
+}
+
+.sensor-marker:hover .marker-label {
+  opacity: 1;
+}
+
+@keyframes marker-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0.7;
+  }
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .metrics-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--space-20);
+  }
+
+  .dashboard-row {
+    grid-template-columns: 1fr;
+    gap: var(--space-20);
+  }
+}
+
+@media (max-width: 768px) {
+  .metrics-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-16);
+  }
+
+  .metric-card {
+    padding: var(--space-20);
+  }
+
+  .metric-value .value {
+    font-size: var(--font-size-3xl);
+  }
+}
+
+/* Alerts Panel */
+.alerts-panel {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-card-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-24);
+}
+
+.alerts-panel h3 {
+  margin: 0 0 var(--space-20) 0;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+}
+
+.alert-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+
+.alert-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-12);
+  padding: var(--space-16);
+  background-color: var(--color-secondary);
+  border-radius: var(--radius-base);
+  border-left: 4px solid var(--color-info);
+  transition: all var(--duration-normal) var(--ease-standard);
+}
+
+.alert-item:hover {
+  background-color: var(--color-secondary-hover);
+  transform: translateX(2px);
+}
+
+.alert-item.warning {
+  border-left-color: var(--color-warning);
+  background-color: rgba(var(--color-warning-rgb), var(--status-bg-opacity));
+}
+
+.alert-item.error {
+  border-left-color: var(--color-error);
+  background-color: rgba(var(--color-error-rgb), var(--status-bg-opacity));
+}
+
+.alert-item.info {
+  border-left-color: var(--color-info);
+  background-color: rgba(var(--color-info-rgb), var(--status-bg-opacity));
+}
+
+.alert-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.alert-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.alert-content p {
+  margin: 0 0 var(--space-4) 0;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+  line-height: var(--line-height-normal);
+}
+
+.alert-time {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-normal);
+}
