@@ -1,6 +1,12 @@
 {
   "version": 2,
-  "buildCommand": "",
-  "outputDirectory": "public"
+  "framework": null,
+  "installCommand": "cd frontend && npm install --legacy-peer-deps",
+  "buildCommand": "cd frontend && npm run build",
+  "outputDirectory": "frontend/build",
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/((?!api).*)", "destination": "/index.html" }
+  ]
 }
 
