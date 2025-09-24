@@ -2,12 +2,23 @@ const { Program, AnchorProvider, Wallet } = require('@coral-xyz/anchor');
 const { Connection, PublicKey, Keypair, SystemProgram, Transaction } = require('@solana/web3.js');
 const path = require('path');
 
-// Load the IDL for the civic_ledger program
-const originalIDL = require(path.join(__dirname, '../../anchor_project/target/idl/civic_ledger.json'));
-const { filterIDL } = require('../utils/idlFilter');
-
-// Filter out problematic tuple types from IDL
-const IDL = filterIDL(originalIDL);
+// Load the IDL for the civic_ledger program (with fallback)
+let IDL = null;
+try {
+  const originalIDL = require(path.join(__dirname, '../../anchor_project/target/idl/civic_ledger.json'));
+  const { filterIDL } = require('../utils/idlFilter');
+  IDL = filterIDL(originalIDL);
+} catch (error) {
+  console.warn('⚠️ Civic Ledger IDL not found, using mock IDL for development');
+  // Provide a minimal mock IDL for development
+  IDL = {
+    version: "0.1.0",
+    name: "civic_ledger",
+    instructions: [],
+    accounts: [],
+    types: []
+  };
+}
 
 /**
  * Real Solana Program Integration for Smart City OS
