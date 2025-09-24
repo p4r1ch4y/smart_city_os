@@ -3,13 +3,101 @@
 
 A comprehensive, production-ready smart city management platform featuring AI-powered analytics, blockchain transparency, and real-time IoT monitoring.
 
-## ⚡️ Economic Model Update
 
-**Sensor Data Aggregation:**
-To ensure economic viability, individual sensor readings are now aggregated off-chain at regular intervals (e.g., hourly/daily). Only compiled summaries and essential contract metadata are pushed to the blockchain, dramatically reducing transaction costs and network congestion.
+Built as a capstone project, was meant to be a simple Full Stack Smart City Management Platform, but tried introducing multiple mucroservice modules inspired from the web.
 
-**Blockchain Usage:**
-Solana is used for transparent logging of contract state and periodic, aggregated sensor summaries. Raw sensor data is stored and analyzed off-chain for analytics and dashboard visualization.
+Waste and different IoT Sensors : https://www.youtube.com/watch?v=v8HIJYyBeSg
+
+Integrated Smart CIty Management Program ( Civil Engineering ) : https://www.youtube.com/playlist?list=PL3MO67NH2XxIYo-UFN8csPPnEiYVyR0TO
+
+Loved the Meri Panchayat Application by Ministry of Panchayat Raj ( similar can be integrated in a smart city dashboard for citizens to access and view their area services ) : https://play.google.com/store/apps/details?id=com.meri_panchayat
+
+
+National Blockchain Stack ( Blockchain_As_A_Service Stack ): https://blockchain.meity.gov.in/index.php/articles/184-vishvasya-national-blockchain-technology-stack 
+
+more...
+
+credit where it's due 
+
+
+
+
+### Full System Architecture Overview
+
+```mermaid
+classDiagram
+    class Frontend {
+        +React 18
+        +Tailwind CSS
+        +Context API
+        +React Query
+        +ThemeContext
+        +AuthContext
+        +CityContext
+    }
+    
+    class BackendAPI {
+        +Express Server
+        +Authentication
+        +Rate Limiting
+        +CORS Middleware
+        +Health Checks
+        +WebSocket Support
+    }
+    
+    class VercelFunctions {
+        +Notices API
+        +Analytics Proxy
+        +Health Endpoint
+        +Debug Tools
+    }
+    
+    class Database {
+        +PostgreSQL
+        +Supabase Auth
+        +Row Level Security
+        +Real-time subscriptions
+    }
+    
+    class Redis {
+        +Session Storage
+        +Caching Layer
+        +Rate Limiting
+    }
+    
+    class AnalyticsService {
+        +Python Flask
+        +ML Models
+        +Predictive Analytics
+        +Data Processing
+    }
+    
+    class IoTSimulation {
+        +Sensor Simulation
+        +Data Generation
+        +API Client
+        +Real-time Updates
+    }
+    
+    class BlockchainService {
+        +Solana Integration
+        +Smart Contracts
+        +Anchor Framework
+        +Transaction Processing
+    }
+    
+    Frontend --> BackendAPI : HTTP/WebSocket
+    Frontend --> VercelFunctions : API Calls
+    BackendAPI --> Database : SQL Queries
+    BackendAPI --> Redis : Caching
+    BackendAPI --> AnalyticsService : Analytics Requests
+    BackendAPI --> BlockchainService : Blockchain Operations
+    IoTSimulation --> BackendAPI : Sensor Data
+    AnalyticsService --> Database : Data Analysis
+    VercelFunctions --> Database : Supabase Client
+```
+
+
 
 ## 🌟 Features
 
@@ -62,7 +150,7 @@ This repository contains a React frontend in `frontend/` and serverless API rout
 
 ### 1) Frontend
 ```bash
-git clone <repository-url>
+git clone https://github.com/p4r1ch4y/smart_city_os/
 cd smart-city_os/frontend
 cp .env.example .env.local   # fill in your Supabase URL and anon key
 npm install
@@ -102,6 +190,17 @@ Notes
 - In development, the frontend (CRA) dev server proxies to http://localhost:3030 (see frontend/package.json `proxy`).
 - To run with a real Postgres instead of fallback, edit `.env` with your DB settings (or set `DATABASE_URL`) and set `FALLBACK_NO_DB=false`.
 - If you see DB connect errors, ensure your DB is reachable or keep `FALLBACK_NO_DB=true`.
+
+
+
+## ⚡️ Economic Model Update
+
+**Sensor Data Aggregation:**
+To ensure economic viability, individual sensor readings are now aggregated off-chain at regular intervals (e.g., hourly/daily). Only compiled summaries and essential contract metadata are pushed to the blockchain, dramatically reducing transaction costs and network congestion.
+
+**Blockchain Usage:**
+Solana is used for transparent logging of contract state and periodic, aggregated sensor summaries. Raw sensor data is stored and analyzed off-chain for analytics and dashboard visualization.
+
 
 ## Project Structure
 

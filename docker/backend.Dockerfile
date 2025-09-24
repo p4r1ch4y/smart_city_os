@@ -12,9 +12,6 @@ COPY package.json package-lock.json ./
 # Install dependencies
 RUN npm install --only=production
 
-# Copy anchor project files (needed for IDL)
-COPY anchor_project/ ../anchor_project/
-
 # Copy backend source code
 COPY backend/ ./
 
@@ -27,11 +24,11 @@ RUN chown -R nodejs:nodejs /app
 USER nodejs
 
 # Expose port
-EXPOSE 3000
+EXPOSE 3030
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:3000/health || exit 1
+  CMD curl -f http://localhost:3030/health || exit 1
 
 # Start the application
 CMD ["node", "server.js"]
