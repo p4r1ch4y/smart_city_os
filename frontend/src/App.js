@@ -27,6 +27,7 @@ const AnnouncementDetail = lazy(() => import('./pages/AnnouncementDetail'));
 const ComposeAnnouncement = lazy(() => import('./pages/ComposeAnnouncement'));
 const EmergencyPaymentStatus = lazy(() => import('./pages/EmergencyPaymentStatus'));
 const QuickEmergencyBook = lazy(() => import('./pages/QuickEmergencyBook'));
+const BillingDashboard = lazy(() => import('./components/billing/BillingDashboard'));
 
 function App() {
   return (
@@ -59,6 +60,7 @@ function App() {
 
                       <Route path="/services/emergency/success" element={<EmergencyPaymentStatus type="success" />} />
                       <Route path="/services/emergency/cancel" element={<EmergencyPaymentStatus type="cancel" />} />
+                  <Route path="/billing" element={<BillingDashboard />} />
 
                   <Route path="/announcements" element={<Announcements />} />
                   <Route path="/announcements/:id" element={<AnnouncementDetail />} />

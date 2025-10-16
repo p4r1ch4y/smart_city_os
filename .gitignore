@@ -13,6 +13,10 @@ yarn.lock
 .env.test.local
 .env.production.local
 
+# Local development documentation (contains sensitive info)
+LOCAL_DEVELOPMENT_GUIDE.md
+DODO_USAGE_BILLING_INTEGRATION_GUIDE.md
+
 # Logs
 logs
 *.log
