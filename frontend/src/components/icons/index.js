@@ -41,6 +41,7 @@ import {
   Filter,
   Calendar,
   Globe,
+  CreditCard,
   Smartphone,
   Monitor,
   Tablet,
@@ -92,6 +93,7 @@ export const Icons = {
   search: Search,
   filter: Filter,
   calendar: Calendar,
+  creditCard: CreditCard,
   
   // Connectivity
   wifi: Wifi,

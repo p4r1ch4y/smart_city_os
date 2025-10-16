@@ -6,13 +6,16 @@ import MetricCard from './MetricCard';
 import RealtimeChart from './RealtimeChart';
 import AlertsList from './AlertsList';
 import SensorMap from './SensorMap';
+import DebugPanel from './DebugPanel';
 import { useNavigate } from 'react-router-dom';
 import { getLatestAnnouncement } from '../lib/announcements';
+import { Settings } from 'lucide-react';
 import './Dashboard.css';
 
 function PrototypeDashboard() {
   const { realtimeData, isConnected, getActiveAlerts } = useSocket();
   const navigate = useNavigate();
+  const [showDebugPanel, setShowDebugPanel] = useState(false);
 
   const [dashboardData, setDashboardData] = useState({
     traffic: { current: 67, trend: "positive", trendValue: "+2.3%" },
@@ -86,20 +89,23 @@ function PrototypeDashboard() {
     }
     return num.toLocaleString();
   };
-      {/* City Notice Peek */}
-      {getLatestAnnouncement() && (
-        <div className="mb-6 p-4 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20">
-          <a href="/announcements" className="block">
-            <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">City Notice</p>
-            <p className="text-gray-800 dark:text-gray-200 line-clamp-2">{getLatestAnnouncement().title}: {getLatestAnnouncement().content}</p>
-            <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">Read more →</p>
-          </a>
-        </div>
-      )}
 
 
   return (
     <div className="dashboard-section">
+      {/* Debug Panel Toggle */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="fixed bottom-4 right-4 z-40">
+          <button
+            onClick={() => setShowDebugPanel(true)}
+            className="p-3 bg-gray-800 text-white rounded-full shadow-lg hover:bg-gray-700 transition-colors"
+            title="Open Debug Panel"
+          >
+            <Settings className="h-5 w-5" />
+          </button>
+        </div>
+      )}
+
       {/* City Notice Peek */}
       {getLatestAnnouncement() && (
         <div className="mb-6 p-4 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20">
@@ -209,6 +215,12 @@ function PrototypeDashboard() {
         />
 
       </div>
+
+      {/* Debug Panel */}
+      <DebugPanel 
+        isOpen={showDebugPanel} 
+        onClose={() => setShowDebugPanel(false)} 
+      />
     </div>
   );
 }

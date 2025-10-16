@@ -261,7 +261,19 @@ function Dashboard() {
             </div>
             <div className="card-body">
               <div className="h-64 sm:h-80">
-                <RealtimeChart data={realtimeData.sensors} />
+                <RealtimeChart 
+                  data={Object.keys(realtimeData.sensors).length > 0 
+                    ? Object.values(realtimeData.sensors).map(sensor => ({
+                        value: sensor.value || Math.random() * 100,
+                        timestamp: sensor.timestamp || Date.now()
+                      }))
+                    : Array.from({length: 20}, (_, i) => ({
+                        value: 50 + Math.sin(i * 0.5) * 20 + Math.random() * 10,
+                        timestamp: Date.now() - (20 - i) * 1000
+                      }))
+                  }
+                  color="#3B82F6"
+                />
               </div>
             </div>
           </div>

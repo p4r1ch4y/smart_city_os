@@ -1,0 +1,71 @@
+{
+  "SOLANA_NETWORK": "devnet",
+  "SOLANA_RPC_URL": "https://api.devnet.solana.com",
+  "CIVIC_LEDGER_PROGRAM_ID": "A8vwRav21fjK55vLQXxDZD8WFLP5cvFyYfBaEsTcy5An",
+  "CONTRACTS": [
+    {
+      "id": "downtown-aq001",
+      "name": "Air Quality Monitoring - Downtown",
+      "location": "Downtown",
+      "sensorId": "AQ001",
+      "type": "IoT Service Agreement",
+      "category": "Environmental",
+      "description": "Continuous air quality monitoring for downtown district",
+      "pdas": {
+        "airQuality": "TBD",
+        "contract": "TBD"
+      },
+      "explorerUrls": {
+        "airQuality": "https://solscan.io/account/TBD?cluster=devnet",
+        "contract": "https://solscan.io/account/TBD?cluster=devnet"
+      }
+    },
+    {
+      "id": "main-street-tr001",
+      "name": "Traffic Management - Main Street",
+      "location": "Main Street",
+      "sensorId": "TR001",
+      "type": "IoT Service Agreement",
+      "category": "Transportation",
+      "description": "Smart traffic light optimization and flow monitoring",
+      "pdas": {
+        "airQuality": "TBD",
+        "contract": "TBD"
+      },
+      "explorerUrls": {
+        "airQuality": "https://solscan.io/account/TBD?cluster=devnet",
+        "contract": "https://solscan.io/account/TBD?cluster=devnet"
+      }
+    },
+    {
+      "id": "zone-a-ws001",
+      "name": "Waste Collection - Zone A",
+      "location": "Zone A",
+      "sensorId": "WS001",
+      "type": "Service Contract",
+      "category": "Waste Management",
+      "description": "Smart waste bin monitoring and collection optimization",
+      "pdas": {
+        "airQuality": "TBD",
+        "contract": "TBD"
+      },
+      "explorerUrls": {
+        "airQuality": "https://solscan.io/account/TBD?cluster=devnet",
+        "contract": "https://solscan.io/account/TBD?cluster=devnet"
+      }
+    }
+  ],
+  "FEATURES": {
+    "contractDeployment": true,
+    "communityFeedback": true,
+    "transparencyReports": true,
+    "walletIntegration": true,
+    "realTimeMonitoring": true
+  },
+  "NETWORK_INFO": {
+    "cluster": "devnet",
+    "commitment": "confirmed",
+    "explorerUrl": "https://explorer.solana.com/?cluster=devnet",
+    "solscanUrl": "https://solscan.io/?cluster=devnet"
+  }
+}

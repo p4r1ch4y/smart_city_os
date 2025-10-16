@@ -300,7 +300,7 @@ function BookServiceForm({ service, onSubmit, onBack, isLoading }) {
                 className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
               >
                 {isLoading && <Icon name="loader" size={16} className="animate-spin" />}
-                <span>{isLoading ? 'Booking...' : 'Proceed to Payment'}</span>
+                <span>{isLoading ? 'Booking Service...' : 'Book Emergency Service'}</span>
               </button>
             </div>
           </form>
@@ -319,46 +319,69 @@ function BookServiceForm({ service, onSubmit, onBack, isLoading }) {
                   <LoadingSpinner size="sm" text="Calculating..." />
                 </div>
               ) : feeCalculation ? (
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Base Fee:</span>
-                    <span className="font-medium">{formatCurrency(feeCalculation.baseFee, feeCalculation.currency || 'INR')}</span>
+                <div className="space-y-4">
+                  {/* Cost Breakdown */}
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Base Fee:</span>
+                      <span className="font-medium">{formatCurrency(feeCalculation.baseFee, feeCalculation.currency || 'INR')}</span>
+                    </div>
+
+                    {feeCalculation.urgencyMultiplier > 1 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">
+                          Urgency ({formData.urgency}):
+                        </span>
+                        <span className="font-medium">
+                          {((feeCalculation.urgencyMultiplier - 1) * 100).toFixed(0)}%
+                        </span>
+                      </div>
+                    )}
+
+                    {feeCalculation.additionalServicesCost > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Additional Services:</span>
+                        <span className="font-medium">{formatCurrency(feeCalculation.additionalServicesCost, feeCalculation.currency || 'INR')}</span>
+                      </div>
+                    )}
+
+                    {feeCalculation.locationSurcharge > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Location Surcharge:</span>
+                        <span className="font-medium">{formatCurrency(feeCalculation.locationSurcharge, feeCalculation.currency || 'INR')}</span>
+                      </div>
+                    )}
+
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Tax:</span>
+                      <span className="font-medium">{formatCurrency(feeCalculation.tax, feeCalculation.currency || 'INR')}</span>
+                    </div>
+
+                    <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
+                      <div className="flex justify-between">
+                        <span className="text-lg font-semibold text-gray-900 dark:text-white">Total:</span>
+                        <span className="text-lg font-bold text-red-600">{formatCurrency(feeCalculation.totalAmount, feeCalculation.currency || 'INR')}</span>
+                      </div>
+                    </div>
                   </div>
 
-                  {feeCalculation.urgencyMultiplier > 1 && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">
-                        Urgency ({formData.urgency}):
-                      </span>
-                      <span className="font-medium">
-                        {((feeCalculation.urgencyMultiplier - 1) * 100).toFixed(0)}%
-                      </span>
-                    </div>
-                  )}
-
-                  {feeCalculation.additionalServicesCost > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">Additional Services:</span>
-                      <span className="font-medium">{formatCurrency(feeCalculation.additionalServicesCost, feeCalculation.currency || 'INR')}</span>
-                    </div>
-                  )}
-
-                  {feeCalculation.locationSurcharge > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">Location Surcharge:</span>
-                      <span className="font-medium">{formatCurrency(feeCalculation.locationSurcharge, feeCalculation.currency || 'INR')}</span>
-                    </div>
-                  )}
-
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Tax:</span>
-                    <span className="font-medium">{formatCurrency(feeCalculation.tax, feeCalculation.currency || 'INR')}</span>
-                  </div>
-
-                  <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
-                    <div className="flex justify-between">
-                      <span className="text-lg font-semibold text-gray-900 dark:text-white">Total:</span>
-                      <span className="text-lg font-bold text-red-600">{formatCurrency(feeCalculation.totalAmount, feeCalculation.currency || 'INR')}</span>
+                  {/* Postpaid Billing Info */}
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mt-4">
+                    <div className="flex items-start space-x-3">
+                      <Icon name="creditCard" size={20} className="text-blue-600 dark:text-blue-400 mt-0.5" />
+                      <div>
+                        <h4 className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                          Postpaid Billing
+                        </h4>
+                        <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
+                          This service will be added to your monthly bill. You'll be charged at the end of the billing cycle.
+                        </p>
+                        <div className="mt-2 text-xs text-blue-600 dark:text-blue-400">
+                          <div>• No upfront payment required</div>
+                          <div>• Monthly billing cycle</div>
+                          <div>• View usage in Billing Dashboard</div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

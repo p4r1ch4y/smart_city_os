@@ -21,10 +21,12 @@ const maybeAuth = (req, res, next) => {
 };
 const EmergencyService = require('../services/emergencyService');
 const DodoPaymentService = require('../services/dodoPaymentService');
+const DodoUsageBillingService = require('../services/dodoUsageBillingService');
 
 // Initialize services
 const emergencyService = new EmergencyService();
 const dodoPaymentService = new DodoPaymentService();
+const usageBillingService = new DodoUsageBillingService();
 
 /**
  * @route GET /api/emergency-services/types
@@ -127,7 +129,28 @@ router.post('/book', maybeAuth, async (req, res) => {
       additionalServices: additionalServices || []
     });
 
-    // Create Dodo payment session
+    // Record usage event for postpaid billing
+    try {
+      await usageBillingService.recordUsageEvent({
+        userId,
+        bookingId: booking.id,
+        serviceType,
+        urgency,
+        location,
+        metadata: {
+          description,
+          contactInfo,
+          additionalServices,
+          feeAmount: feeCalculation.totalAmount
+        }
+      });
+      console.log(`📊 Usage event recorded for booking: ${booking.id}`);
+    } catch (usageError) {
+      console.error('Failed to record usage event:', usageError.message);
+      // Continue with booking even if usage tracking fails
+    }
+
+    // Create Dodo payment session (for immediate payment option)
     const paymentSession = await dodoPaymentService.createPaymentSession({
       bookingId: booking.id,
       amount: feeCalculation.totalAmount,
@@ -146,7 +169,11 @@ router.post('/book', maybeAuth, async (req, res) => {
       data: {
         booking,
         feeCalculation,
-        paymentSession
+        paymentSession,
+        billing: {
+          type: 'postpaid',
+          message: 'Service usage recorded for monthly billing'
+        }
       }
     });
   } catch (error) {
@@ -350,6 +377,181 @@ router.patch('/admin/bookings/:id/status', maybeAuth, async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to update booking status'
+    });
+  }
+});
+
+// ==================== USAGE-BASED BILLING ROUTES ====================
+
+/**
+ * @route GET /api/emergency-services/billing/usage
+ * @desc Get current user's usage summary
+ * @access Private
+ */
+router.get('/billing/usage', maybeAuth, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { period } = req.query;
+
+    const usage = await usageBillingService.getCustomerUsage(userId, period);
+
+    res.json({
+      success: true,
+      data: usage
+    });
+  } catch (error) {
+    console.error('Error fetching usage:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch usage data'
+    });
+  }
+});
+
+/**
+ * @route GET /api/emergency-services/billing/invoices
+ * @desc Get current user's invoices
+ * @access Private
+ */
+router.get('/billing/invoices', maybeAuth, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { status, limit, offset } = req.query;
+
+    const invoices = await usageBillingService.getCustomerInvoices(userId, {
+      status,
+      limit: parseInt(limit) || 10,
+      offset: parseInt(offset) || 0
+    });
+
+    res.json({
+      success: true,
+      data: invoices
+    });
+  } catch (error) {
+    console.error('Error fetching invoices:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch invoices'
+    });
+  }
+});
+
+/**
+ * @route POST /api/emergency-services/billing/generate-invoice
+ * @desc Generate invoice for current period
+ * @access Private
+ */
+router.post('/billing/generate-invoice', maybeAuth, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { period } = req.body;
+
+    const invoice = await usageBillingService.generateInvoice(userId, period);
+
+    res.json({
+      success: true,
+      data: invoice
+    });
+  } catch (error) {
+    console.error('Error generating invoice:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to generate invoice'
+    });
+  }
+});
+
+/**
+ * @route GET /api/emergency-services/admin/billing/overview
+ * @desc Get admin billing overview
+ * @access Private (Admin only)
+ */
+router.get('/admin/billing/overview', maybeAuth, async (req, res) => {
+  try {
+    if (!req.user.isAdmin) {
+      return res.status(403).json({
+        success: false,
+        error: 'Admin access required'
+      });
+    }
+
+    const { period } = req.query;
+    const overview = await usageBillingService.getAdminUsageOverview(period);
+
+    res.json({
+      success: true,
+      data: overview
+    });
+  } catch (error) {
+    console.error('Error fetching billing overview:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch billing overview'
+    });
+  }
+});
+
+/**
+ * @route POST /api/emergency-services/billing/webhook
+ * @desc Handle Dodo usage billing webhooks
+ * @access Public (webhook)
+ */
+router.post('/billing/webhook', async (req, res) => {
+  try {
+    const webhookData = req.body;
+    
+    // Verify webhook signature
+    const isValid = await usageBillingService.verifyWebhook(webhookData, req.headers);
+    
+    if (!isValid) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid webhook signature'
+      });
+    }
+
+    // Process billing webhook
+    const result = await usageBillingService.processUsageBillingWebhook(webhookData);
+
+    res.json({
+      success: true,
+      data: result
+    });
+  } catch (error) {
+    console.error('Error processing billing webhook:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to process billing webhook'
+    });
+  }
+});
+
+/**
+ * @route GET /api/emergency-services/billing/status
+ * @desc Get billing service status
+ * @access Private (Admin only)
+ */
+router.get('/billing/status', maybeAuth, async (req, res) => {
+  try {
+    if (!req.user.isAdmin) {
+      return res.status(403).json({
+        success: false,
+        error: 'Admin access required'
+      });
+    }
+
+    const status = usageBillingService.getServiceStatus();
+
+    res.json({
+      success: true,
+      data: status
+    });
+  } catch (error) {
+    console.error('Error fetching billing status:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch billing status'
     });
   }
 });

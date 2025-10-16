@@ -443,4 +443,189 @@ router.post('/initialize-contract', authMiddleware, async (req, res) => {
   }
 });
 
+// ==================== CIVIC dApp ROUTES ====================
+
+/**
+ * @route POST /api/blockchain/deploy-contract
+ * @desc Deploy new civic contract (Admin only)
+ * @access Private (Admin)
+ */
+router.post('/deploy-contract', authMiddleware, async (req, res) => {
+  try {
+    // Check admin permissions
+    if (!req.user.isAdmin && req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        error: 'Admin access required'
+      });
+    }
+
+    const {
+      contractType,
+      location,
+      sensorId,
+      description,
+      category,
+      deployerWallet
+    } = req.body;
+
+    // Validate required fields
+    if (!contractType || !location || !sensorId || !description) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields'
+      });
+    }
+
+    // Deploy contract using blockchain service
+    const deploymentResult = await blockchainService.deployContract({
+      contractType,
+      location,
+      sensorId,
+      description,
+      category,
+      deployerWallet,
+      deployedBy: req.user.id
+    });
+
+    res.json({
+      success: true,
+      data: deploymentResult
+    });
+
+  } catch (error) {
+    console.error('Contract deployment error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to deploy contract'
+    });
+  }
+});
+
+/**
+ * @route GET /api/blockchain/contracts
+ * @desc Get all civic contracts
+ * @access Public
+ */
+router.get('/contracts', async (req, res) => {
+  try {
+    const { category, status, limit = 50 } = req.query;
+    
+    const contracts = await blockchainService.getContracts({
+      category,
+      status,
+      limit: parseInt(limit)
+    });
+
+    res.json({
+      success: true,
+      data: contracts
+    });
+
+  } catch (error) {
+    console.error('Error fetching contracts:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch contracts'
+    });
+  }
+});
+
+/**
+ * @route POST /api/blockchain/submit-feedback
+ * @desc Submit community feedback about a contract
+ * @access Public (requires wallet signature)
+ */
+router.post('/submit-feedback', async (req, res) => {
+  try {
+    const {
+      contractId,
+      message,
+      walletAddress,
+      signature
+    } = req.body;
+
+    // Validate required fields
+    if (!contractId || !message || !walletAddress || !signature) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields'
+      });
+    }
+
+    // Submit feedback to blockchain
+    const feedbackResult = await blockchainService.submitFeedback({
+      contractId,
+      message,
+      walletAddress,
+      signature,
+      timestamp: new Date().toISOString()
+    });
+
+    res.json({
+      success: true,
+      data: feedbackResult
+    });
+
+  } catch (error) {
+    console.error('Error submitting feedback:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to submit feedback'
+    });
+  }
+});
+
+/**
+ * @route GET /api/blockchain/feedback/:contractId
+ * @desc Get community feedback for a specific contract
+ * @access Public
+ */
+router.get('/feedback/:contractId', async (req, res) => {
+  try {
+    const { contractId } = req.params;
+    const { limit = 20, offset = 0 } = req.query;
+
+    const feedback = await blockchainService.getContractFeedback(contractId, {
+      limit: parseInt(limit),
+      offset: parseInt(offset)
+    });
+
+    res.json({
+      success: true,
+      data: feedback
+    });
+
+  } catch (error) {
+    console.error('Error fetching feedback:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch feedback'
+    });
+  }
+});
+
+/**
+ * @route GET /api/blockchain/dapp/status
+ * @desc Get dApp service status
+ * @access Public
+ */
+router.get('/dapp/status', async (req, res) => {
+  try {
+    const status = await blockchainService.getDAppStatus();
+
+    res.json({
+      success: true,
+      data: status
+    });
+
+  } catch (error) {
+    console.error('Error fetching dApp status:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch dApp status'
+    });
+  }
+});
+
 module.exports = router;

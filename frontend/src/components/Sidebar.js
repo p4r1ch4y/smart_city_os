@@ -12,12 +12,14 @@ import {
   LinkIcon,
   BuildingOfficeIcon,
   Cog6ToothIcon,
-  XMarkIcon
+  XMarkIcon,
+  CreditCardIcon
 } from '@heroicons/react/24/outline';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: HomeIcon, section: 'dashboard' },
   { name: 'City Services', href: '/services', icon: BuildingOfficeIcon, section: 'services' },
+  { name: 'Billing & Usage', href: '/billing', icon: CreditCardIcon, section: 'billing' },
   { name: 'Analytics', href: '/analytics', icon: ChartBarIcon, section: 'analytics' },
   { name: 'City Notices', href: '/announcements', icon: ExclamationTriangleIcon, section: 'announcements' },
 
